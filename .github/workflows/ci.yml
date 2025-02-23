@@ -1,112 +1,170 @@
 name: CI
+
 on:
   push:
-    branches:
-      - main
+    branches: [main, dev]
   pull_request:
 
 jobs:
-
   lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        lint-command:
-          - bandit -r . -x ./tests
-          - black --check --diff .
-          - flake8 .
-          - isort --check-only --diff .
-          - pydocstyle .
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-          cache: 'pip'
-          cache-dependency-path: 'linter-requirements.txt'
-      - run: python -m pip install -r linter-requirements.txt
-      - run: ${{ matrix.lint-command }}
 
-  dist:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run ruff linting
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run mypy
+        run: uv run mypy django_tomselect2
+
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
-      - run: python -m pip install --upgrade pip build wheel twine readme-renderer
-      - run: python -m build --sdist --wheel
-      - run: python -m twine check dist/*
+          fetch-depth: 0 # Needed for hatch-vcs versioning
 
-  standardjs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          node-version: '12.x'
-      - run: npm install -g standard
-      - run: standard
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build package
+        run: |
+          uv build
+          uv run twine check dist/*
 
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-      - run: sudo apt-get install -y gettext graphviz
-      - run: python -m pip install -e .[docs]
-      - run: python -m sphinx -W -b doctest -b html docs docs/_build
+          fetch-depth: 0
 
-  PyTest:
-    needs:
-      - lint
-      - standardjs
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install system dependencies
+        run: sudo apt-get install -y gettext graphviz
+
+      - name: Install dependencies
+        run: uv sync --extra docs
+
+      - name: Build docs
+        run: uv run sphinx-build -W -b html docs docs/_build
+
+  test:
+    needs: [lint]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version:
-          - "3.8"
-          - "3.9"
-          - "3.10"
-          - "3.11"
-        django-version:
-          - "3.2"
-          - "4.1"
-          - "4.2"
-    runs-on: ubuntu-latest
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        django-version: ["4.2", "5.0", "5.1"]
+        exclude:
+          - python-version: "3.10"
+            django-version: "5.1" # Django 5.1 requires Python 3.10+, but let's be conservative
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m pip install Django~="${{ matrix.django-version }}.0"
-      - run: python -m pip install -e .[test]
-      - run: python -m pytest -m "not selenium"
-      - uses: codecov/codecov-action@v5
 
-  Selenium:
-    needs:
-      - lint
-      - standardjs
-    strategy:
-      matrix:
-        python-version:
-          - "3.x"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Chrome
-        run: sudo apt-get install -y google-chrome-stable
-      - name: Install Selenium
+      - name: Install dependencies
         run: |
-          mkdir bin
-          curl -O https://chromedriver.storage.googleapis.com/`curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip
-          unzip chromedriver_linux64.zip -d bin
-      - uses: actions/setup-python@v5
+          uv sync --extra test
+          uv add "django~=${{ matrix.django-version }}.0"
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
+      - name: Run non-browser tests
+        run: uv run pytest -m "not playwright"
+
+      - name: Upload coverage (main matrix only)
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.13' && matrix.django-version == '5.1'
         with:
-          python-version: ${{ matrix.python-version }}
-      - run: python -m pip install Django
-      - run: python -m pip install -e .[test,selenium]
-      - run: python -m pytest -m selenium
-      - uses: codecov/codecov-action@v5
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  playwright:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra test
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: uv run pytest -m playwright
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Ruff security checks
+        run: uv run ruff check --select S .
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4

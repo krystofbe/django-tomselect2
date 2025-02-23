@@ -1,5 +1,5 @@
-include django_select2/static/django_select2/django_select2.js
-include django_select2/static/django_select2/django_select2.css
+include django_tomselect2/static/django_tomselect2/django_tomselect2.js
+include django_tomselect2/static/django_tomselect2/django_tomselect2.css
 prune .github
 exclude .*
 

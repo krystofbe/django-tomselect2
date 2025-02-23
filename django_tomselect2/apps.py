@@ -3,11 +3,11 @@
 from django.apps import AppConfig
 
 
-class Select2AppConfig(AppConfig):
+class TomSelect2AppConfig(AppConfig):
     """Django application configuration."""
 
-    name = "django_select2"
-    verbose_name = "Select2"
+    name = "django_tomselect2"
+    verbose_name = "Django Tom Select2"
 
     def ready(self):
         from . import conf  # noqa

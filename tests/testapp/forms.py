@@ -1,65 +1,65 @@
 from django import forms
 from django.utils.encoding import force_str
 
-from django_select2.forms import (
-    HeavySelect2MultipleWidget,
-    HeavySelect2Widget,
-    ModelSelect2MultipleWidget,
-    ModelSelect2TagWidget,
-    ModelSelect2Widget,
-    Select2MultipleWidget,
-    Select2Widget,
+from django_tomselect2.forms import (
+    HeavyTomSelectMultipleWidget,
+    HeavyTomSelectWidget,
+    ModelTomSelectMultipleWidget,
+    ModelTomSelectTagWidget,
+    ModelTomSelectWidget,
+    TomSelectMultipleWidget,
+    TomSelectWidget,
 )
 from tests.testapp import models
-from tests.testapp.models import Album, City, Country
+from tests.testapp.models import Album, Artist, City, Country, Genre
 
 
 class TitleSearchFieldMixin:
     search_fields = ["title__icontains", "pk__startswith"]
 
 
-class TitleModelSelect2Widget(TitleSearchFieldMixin, ModelSelect2Widget):
+class TitleModelTomSelectWidget(TitleSearchFieldMixin, ModelTomSelectWidget):
     pass
 
 
-class TitleModelSelect2MultipleWidget(
-    TitleSearchFieldMixin, ModelSelect2MultipleWidget
+class TitleModelTomSelectMultipleWidget(
+    TitleSearchFieldMixin, ModelTomSelectMultipleWidget
 ):
     pass
 
 
-class GenreSelect2TagWidget(TitleSearchFieldMixin, ModelSelect2TagWidget):
+class GenreTomSelectTagWidget(TitleSearchFieldMixin, ModelTomSelectTagWidget):
     model = models.Genre
 
     def create_value(self, value):
         self.get_queryset().create(title=value)
 
 
-class ArtistCustomTitleWidget(ModelSelect2Widget):
-    model = models.Artist
+class ArtistCustomTitleWidget(ModelTomSelectWidget):
+    model = Artist
     search_fields = ["title__icontains"]
 
     def label_from_instance(self, obj):
         return force_str(obj.title).upper()
 
 
-class GenreCustomTitleWidget(ModelSelect2Widget):
-    model = models.Genre
+class GenreCustomTitleWidget(ModelTomSelectWidget):
+    model = Genre
     search_fields = ["title__icontains"]
 
     def label_from_instance(self, obj):
         return force_str(obj.title).upper()
 
 
-class ArtistDataViewWidget(HeavySelect2Widget):
+class ArtistDataViewWidget(HeavyTomSelectWidget):
     data_view = "heavy_data_1"
 
 
-class PrimaryGenreDataUrlWidget(HeavySelect2Widget):
+class PrimaryGenreDataUrlWidget(HeavyTomSelectWidget):
     data_url = "/heavy_data_2/"
 
 
-class AlbumSelect2WidgetForm(forms.ModelForm):
+class AlbumTomSelectWidgetForm(forms.ModelForm):
     class Meta:
         model = models.Album
         fields = (
@@ -67,12 +67,12 @@ class AlbumSelect2WidgetForm(forms.ModelForm):
             "primary_genre",
         )
         widgets = {
-            "artist": Select2Widget,
-            "primary_genre": Select2Widget,
+            "artist": TomSelectWidget,
+            "primary_genre": TomSelectWidget,
         }
 
 
-class AlbumSelect2MultipleWidgetForm(forms.ModelForm):
+class AlbumTomSelectMultipleWidgetForm(forms.ModelForm):
     class Meta:
         model = models.Album
         fields = (
@@ -80,29 +80,27 @@ class AlbumSelect2MultipleWidgetForm(forms.ModelForm):
             "featured_artists",
         )
         widgets = {
-            "genres": Select2MultipleWidget,
-            "featured_artists": Select2MultipleWidget,
+            "genres": TomSelectMultipleWidget,
+            "featured_artists": TomSelectMultipleWidget,
         }
 
 
-class AlbumModelSelect2WidgetForm(forms.ModelForm):
+class AlbumModelTomSelectWidgetForm(forms.ModelForm):
     class Meta:
-        model = models.Album
+        model = Album
         fields = (
             "artist",
             "primary_genre",
         )
         widgets = {
             "artist": ArtistCustomTitleWidget(),
-            "primary_genre": GenreCustomTitleWidget(),
+            "primary_genre": GenreCustomTitleWidget(
+                dependent_fields={"artist": "artist"}
+            ),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["primary_genre"].initial = 2
 
-
-class AlbumModelSelect2MultipleWidgetRequiredForm(forms.ModelForm):
+class AlbumModelTomSelectMultipleWidgetRequiredForm(forms.ModelForm):
     class Meta:
         model = Album
         fields = (
@@ -110,15 +108,15 @@ class AlbumModelSelect2MultipleWidgetRequiredForm(forms.ModelForm):
             "featured_artists",
         )
         widgets = {
-            "genres": TitleModelSelect2MultipleWidget,
-            "featured_artists": TitleModelSelect2MultipleWidget,
+            "genres": TitleModelTomSelectMultipleWidget,
+            "featured_artists": TitleModelTomSelectMultipleWidget,
         }
 
 
-class ArtistModelSelect2MultipleWidgetForm(forms.Form):
+class ArtistModelTomSelectMultipleWidgetForm(forms.Form):
     title = forms.CharField(max_length=50)
     genres = forms.ModelMultipleChoiceField(
-        widget=ModelSelect2MultipleWidget(
+        widget=ModelTomSelectMultipleWidget(
             queryset=models.Genre.objects.all(),
             search_fields=["title__icontains"],
         ),
@@ -127,7 +125,7 @@ class ArtistModelSelect2MultipleWidgetForm(forms.Form):
     )
 
     featured_artists = forms.ModelMultipleChoiceField(
-        widget=ModelSelect2MultipleWidget(
+        widget=ModelTomSelectMultipleWidget(
             queryset=models.Artist.objects.all(),
             search_fields=["title__icontains"],
         ),
@@ -144,13 +142,29 @@ NUMBER_CHOICES = [
 ]
 
 
-class Select2WidgetForm(forms.Form):
+class TomSelectClearableWidget(TomSelectWidget):
+    plugins = {"clear_button": {}}
+
+
+class TomSelectClearableMultipleWidget(TomSelectMultipleWidget):
+    plugins = {"clear_button": {}}
+
+
+class TomSelectWidgetForm(forms.Form):
     number = forms.ChoiceField(
-        widget=Select2Widget, choices=NUMBER_CHOICES, required=False
+        widget=TomSelectClearableWidget, choices=NUMBER_CHOICES, required=False
     )
 
 
-class HeavySelect2WidgetForm(forms.Form):
+class TomSelectMultipleWidgetForm(forms.Form):
+    numbers = forms.MultipleChoiceField(
+        widget=TomSelectClearableMultipleWidget,
+        choices=NUMBER_CHOICES,
+        required=False,
+    )
+
+
+class HeavyTomSelectWidgetForm(forms.Form):
     artist = forms.ChoiceField(widget=ArtistDataViewWidget(), choices=NUMBER_CHOICES)
     primary_genre = forms.ChoiceField(
         widget=PrimaryGenreDataUrlWidget(),
@@ -159,10 +173,10 @@ class HeavySelect2WidgetForm(forms.Form):
     )
 
 
-class HeavySelect2MultipleWidgetForm(forms.Form):
+class HeavyTomSelectMultipleWidgetForm(forms.Form):
     title = forms.CharField(max_length=50)
     genres = forms.MultipleChoiceField(
-        widget=HeavySelect2MultipleWidget(
+        widget=HeavyTomSelectMultipleWidget(
             data_view="heavy_data_1",
             choices=NUMBER_CHOICES,
             attrs={"data-minimum-input-length": 0},
@@ -170,7 +184,7 @@ class HeavySelect2MultipleWidgetForm(forms.Form):
         choices=NUMBER_CHOICES,
     )
     featured_artists = forms.MultipleChoiceField(
-        widget=HeavySelect2MultipleWidget(
+        widget=HeavyTomSelectMultipleWidget(
             data_view="heavy_data_2",
             choices=NUMBER_CHOICES,
             attrs={"data-minimum-input-length": 0},
@@ -185,18 +199,18 @@ class HeavySelect2MultipleWidgetForm(forms.Form):
         return self.cleaned_data["title"]
 
 
-class ModelSelect2TagWidgetForm(forms.ModelForm):
+class ModelTomSelectTagWidgetForm(forms.ModelForm):
     class Meta:
         model = Album
         fields = ["genres"]
-        widgets = {"genres": GenreSelect2TagWidget}
+        widgets = {"genres": GenreTomSelectTagWidget}
 
 
-class AddressChainedSelect2WidgetForm(forms.Form):
+class AddressChainedTomSelectWidgetForm(forms.Form):
     country = forms.ModelChoiceField(
         queryset=Country.objects.all(),
         label="Country",
-        widget=ModelSelect2Widget(
+        widget=ModelTomSelectWidget(
             search_fields=["name__icontains"],
             max_results=500,
             dependent_fields={"city": "cities"},
@@ -207,7 +221,7 @@ class AddressChainedSelect2WidgetForm(forms.Form):
     city = forms.ModelChoiceField(
         queryset=City.objects.all(),
         label="City",
-        widget=ModelSelect2Widget(
+        widget=ModelTomSelectWidget(
             search_fields=["name__icontains"],
             dependent_fields={"country": "country"},
             max_results=500,
@@ -218,7 +232,7 @@ class AddressChainedSelect2WidgetForm(forms.Form):
     city2 = forms.ModelChoiceField(
         queryset=City.objects.all(),
         label="City not Interdependent",
-        widget=ModelSelect2Widget(
+        widget=ModelTomSelectWidget(
             search_fields=["name__icontains"],
             dependent_fields={"country": "country"},
             max_results=500,
@@ -230,11 +244,11 @@ class AddressChainedSelect2WidgetForm(forms.Form):
 class GroupieForm(forms.ModelForm):
     class Meta:
         model = models.Groupie
-        fields = "__all__"
+        fields = ["id", "obsession"]
         widgets = {"obsession": ArtistCustomTitleWidget}
 
 
-class CityModelSelect2Widget(ModelSelect2Widget):
+class CityModelTomSelectWidget(ModelTomSelectWidget):
     model = City
     search_fields = ["name"]
 
@@ -244,5 +258,5 @@ class CityModelSelect2Widget(ModelSelect2Widget):
 
 class CityForm(forms.Form):
     city = forms.ModelChoiceField(
-        queryset=City.objects.all(), widget=CityModelSelect2Widget(), required=False
+        queryset=City.objects.all(), widget=CityModelTomSelectWidget(), required=False
     )

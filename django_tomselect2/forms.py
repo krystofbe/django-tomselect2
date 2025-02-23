@@ -1,9 +1,9 @@
 """
-Django-Select2 Widgets.
+Django-TomSelect2 Widgets.
 
 These components are responsible for rendering
 the necessary HTML data markups. Since this whole
-package is to render choices using Select2 JavaScript
+package is to render choices using Tom Select JavaScript
 library, hence these components are meant to be used
 with choice fields.
 
@@ -31,7 +31,7 @@ are large and need complex queries (from maybe different
 sources) to get the options.
 
 This dynamic fetching of options undoubtedly requires
-Ajax communication with the server. Django-Select2 includes
+Ajax communication with the server. Django-TomSelect2 includes
 a helper JS file which is included automatically,
 so you need not worry about writing any Ajax related JS code.
 Although on the server side you do need to create a view
@@ -49,20 +49,20 @@ Heavy and Model widgets have respectively the word 'Heavy' and 'Model' in
 their name.  Light widgets are normally named, i.e. there is no 'Light' word
 in their names.
 
-.. inheritance-diagram:: django_select2.forms
+.. inheritance-diagram:: django_tomselect2.forms
     :parts: 1
 
 """
 
+import json
 import operator
 import uuid
+from contextlib import suppress
 from functools import reduce
-from itertools import chain
 from pickle import PicklingError  # nosec
 
 import django
 from django import forms
-from django.contrib.admin.widgets import AutocompleteMixin
 from django.core import signing
 from django.db.models import Q
 from django.forms.models import ModelChoiceIterator
@@ -79,123 +79,155 @@ else:
     from django.contrib.admin.utils import lookup_spawns_duplicates
 
 
-class Select2Mixin:
+class TomSelectMixin:
     """
-    The base mixin of all Select2 widgets.
-
-    This mixin is responsible for rendering the necessary
-    data attributes for select2 as well as adding the static
-    form media.
+    The base mixin for integrating Tom Select with Django widgets.
     """
 
-    css_class_name = "django-select2"
-    theme = None
-
+    theme = settings.TOMSELECT2_THEME
     empty_label = ""
+    plugins = {}
 
-    @property
-    def i18n_name(self):
-        """Name of the i18n file for the current language."""
-        if django.VERSION < (4, 1):
-            from django.contrib.admin.widgets import SELECT2_TRANSLATIONS
-            from django.utils.translation import get_language
+    def __init__(
+        self, attrs=None, choices=(), plugins=None, tom_select_settings=None, **kwargs
+    ):
+        """
+        Initialize TomSelectMixin.
 
-            return SELECT2_TRANSLATIONS.get(get_language())
-        else:
-            from django.contrib.admin.widgets import get_select2_language
-
-            return get_select2_language()
+        Args:
+            attrs (dict): HTML attributes for the widget.
+            choices (iterable): Choices for the select widget.
+            plugins (dict): Plugins and their configurations.
+            tom_select_settings (dict): Custom Tom Select settings for this widget.
+            theme (str): Theme name for Tom Select.
+        """
+        super().__init__(attrs)
+        self.theme = kwargs.pop("theme", self.theme)
+        self.plugins = plugins or self.plugins  # Use provided plugins or default
+        self.tom_select_settings = tom_select_settings or {}
 
     def build_attrs(self, base_attrs, extra_attrs=None):
-        """Add select2 data attributes."""
+        """Add common Tom Select attributes that apply to all widget types."""
+        # Merge base_attrs with self.attrs
+        base_attrs = base_attrs or {}
+        merged_attrs = {**self.attrs, **base_attrs}
+
+        existing_settings = {}
+        if "data-tom-select" in merged_attrs:
+            with suppress(json.JSONDecodeError, TypeError):
+                existing_settings = json.loads(merged_attrs["data-tom-select"])
+
+        # Start with global settings
+        tom_select_settings = settings.TOMSELECT2_TOM_SELECT_SETTINGS.copy()
+
+        # Update with existing settings from the attributes
+        tom_select_settings.update(existing_settings)
+
+        # Update with per-widget settings
+        tom_select_settings.update(self.tom_select_settings)
+
+        # Common settings that apply to all widget types
+        tom_select_settings.update(
+            {
+                "theme": self.theme,
+                "placeholder": merged_attrs.get("placeholder", "")
+                if extra_attrs
+                else merged_attrs.get("placeholder", ""),
+            }
+        )
+
+        # Process plugins
+        if self.plugins:
+            tom_select_settings["plugins"] = self.plugins
+
+        # Serialize the settings to JSON
         default_attrs = {
-            "lang": self.i18n_name,
-            "data-minimum-input-length": 0,
-            "data-theme": self.theme or settings.SELECT2_THEME,
+            "data-tom-select": json.dumps(tom_select_settings),
+            "data-placeholder": self.empty_label,
         }
-        if self.is_required:
-            default_attrs["data-allow-clear"] = "false"
-        else:
-            default_attrs["data-allow-clear"] = "true"
-            default_attrs["data-placeholder"] = self.empty_label or ""
 
-        default_attrs.update(base_attrs)
-        attrs = super().build_attrs(default_attrs, extra_attrs=extra_attrs)
+        # Merge other attributes from the parent class base_attrs but not data-tom-select
+        default_attrs.update(
+            {k: v for k, v in merged_attrs.items() if k != "data-tom-select"}
+        )
 
-        if "class" in attrs:
-            attrs["class"] += " " + self.css_class_name
-        else:
-            attrs["class"] = self.css_class_name
-        return attrs
+        return super().build_attrs(default_attrs, extra_attrs=extra_attrs)
 
     def optgroups(self, name, value, attrs=None):
-        """Add empty option for clearable selects."""
+        """
+        Optionally add an empty choice for clearable selects.
+
+        Args:
+            name (str): Field name.
+            value (str): Current value.
+            attrs (dict): HTML attributes.
+
+        Returns:
+            list: Option groups.
+        """
         if not self.is_required and not self.allow_multiple_selected:
-            self.choices = list(chain([("", "")], self.choices))
+            self.choices = [("", self.empty_label or "---------")] + list(self.choices)
         return super().optgroups(name, value, attrs=attrs)
 
     @property
     def media(self):
         """
-        Construct Media as a dynamic property.
+        Define the media (CSS and JS) required by Tom Select.
 
-        .. Note:: For more information visit
-            https://docs.djangoproject.com/en/stable/topics/forms/media/#media-as-a-dynamic-property
+        Returns:
+            forms.Media: Media object containing JS and CSS files.
         """
-        select2_js = settings.SELECT2_JS if settings.SELECT2_JS else []
-        select2_css = settings.SELECT2_CSS if settings.SELECT2_CSS else []
+        tom_select_js = settings.TOMSELECT2_TOM_SELECT_JS
 
-        if isinstance(select2_js, str):
-            select2_js = [select2_js]
-        if isinstance(select2_css, str):
-            select2_css = [select2_css]
-
-        i18n_file = []
-        if self.i18n_name in settings.SELECT2_I18N_AVAILABLE_LANGUAGES:
-            i18n_file = [f"{settings.SELECT2_I18N_PATH}/{self.i18n_name}.js"]
+        theme_css = settings.TOMSELECT2_TOM_SELECT_THEME_CSS_TEMPLATE.format(
+            theme=self.theme
+        )
 
         return forms.Media(
-            js=select2_js + i18n_file + ["django_select2/django_select2.js"],
-            css={"screen": select2_css + ["django_select2/django_select2.css"]},
+            js=tom_select_js + ["django_tomselect2/django_tomselect.js"],
+            css={
+                "all": [
+                    "django_tomselect2/django_tomselect.css",
+                    theme_css,
+                ]
+            },
         )
 
 
-class Select2AdminMixin:
-    """Select2 mixin that uses Django's own select template."""
-
-    theme = "admin-autocomplete"
-
-    @property
-    def media(self):
-        css = {**AutocompleteMixin(None, None).media._css}
-        css["screen"].append("django_select2/django_select2.css")
-        js = [*Select2Mixin().media._js]
-        js.insert(
-            js.index("django_select2/django_select2.js"), "admin/js/jquery.init.js"
-        )
-        return forms.Media(
-            js=js,
-            css=css,
-        )
-
-
-class Select2TagMixin:
-    """Mixin to add select2 tag functionality."""
+class TomSelectTagMixin(TomSelectMixin):
+    """Mixin to add tom-select tag functionality."""
 
     def build_attrs(self, base_attrs, extra_attrs=None):
-        """Add select2's tag attributes."""
-        default_attrs = {
-            "data-minimum-input-length": 1,
-            "data-tags": "true",
-            "data-token-separators": '[",", " "]',
-        }
-        default_attrs.update(base_attrs)
-        return super().build_attrs(default_attrs, extra_attrs=extra_attrs)
+        """Add tom-select's tag attributes."""
+        # Call the parent build_attrs to get existing attributes
+        attrs = super().build_attrs(base_attrs, extra_attrs=extra_attrs)
+
+        # Load existing tom-select settings from data-tom-select
+        tom_select_settings = json.loads(attrs.get("data-tom-select", "{}"))
+
+        # Update settings to enable tagging functionality
+        tom_select_settings.update(
+            {
+                "create": True,  # Allow creation of new tags
+                "delimiter": ",",  # Delimiter for separating tags
+                "persist": False,  # Do not persist created tags in the options
+                "dropdownParent": "body",  # Optional: Append dropdown to body
+                "placeholder": extra_attrs.get("placeholder", "Select or add tags")
+                if extra_attrs
+                else "Select or add tags",
+                "hideSelected": False,  # Show selected items in the dropdown
+            }
+        )
+
+        # Serialize the updated settings back to JSON
+        attrs["data-tom-select"] = json.dumps(tom_select_settings)
+
+        return attrs
 
 
-class Select2Widget(Select2Mixin, forms.Select):
+class TomSelectWidget(TomSelectMixin, forms.Select):
     """
-    Select2 drop in widget.
+    Tom Select drop-in widget.
 
     Example usage::
 
@@ -204,32 +236,32 @@ class Select2Widget(Select2Mixin, forms.Select):
                 model = MyModel
                 fields = ('my_field', )
                 widgets = {
-                    'my_field': Select2Widget
+                    'my_field': TomSelectWidget
                 }
 
     or::
 
         class MyForm(forms.Form):
-            my_choice = forms.ChoiceField(widget=Select2Widget)
+            my_choice = forms.ChoiceField(widget=TomSelectWidget)
 
     """
 
 
-class Select2MultipleWidget(Select2Mixin, forms.SelectMultiple):
+class TomSelectMultipleWidget(TomSelectMixin, forms.SelectMultiple):
     """
-    Select2 drop in widget for multiple select.
+    Tom Select drop-in widget for multiple select.
 
-    Works just like :class:`.Select2Widget` but for multi select.
+    Works just like :class:`.TomSelectWidget` but for multi select.
     """
 
 
-class Select2TagWidget(Select2TagMixin, Select2Mixin, forms.SelectMultiple):
+class TomSelectTagWidget(TomSelectTagMixin, TomSelectMixin, forms.SelectMultiple):
     """
-    Select2 drop in widget with tagging support. It allows to dynamically create new options from text input by the user.
+    Tom Select drop in widget with tagging support. It allows to dynamically create new options from text input by the user.
 
     Example for :class:`.django.contrib.postgres.fields.ArrayField`::
 
-        class MyWidget(Select2TagWidget):
+        class MyWidget(TomSelectTagWidget):
 
             def value_from_datadict(self, data, files, name):
                 values = super().value_from_datadict(data, files, name)
@@ -244,41 +276,36 @@ class Select2TagWidget(Select2TagMixin, Select2Mixin, forms.SelectMultiple):
     """
 
 
-class HeavySelect2Mixin:
-    """Mixin that adds select2's AJAX options and registers itself on Django's cache."""
+class HeavyTomSelectMixin(forms.Widget):
+    """Mixin that adds Tom Select's AJAX options and registers itself on Django's cache."""
 
     dependent_fields = {}
     data_view = None
     data_url = None
+    theme = settings.TOMSELECT2_THEME
 
     def __init__(self, attrs=None, choices=(), **kwargs):
         """
-        Return HeavySelect2Mixin.
+        Initialize HeavyTomSelectMixin.
 
         Args:
-            data_view (str): URL pattern name
-            data_url (str): URL
-            dependent_fields (dict): Dictionary of dependent parent fields.
-                The value of the dependent field will be passed as to :func:`.filter_queryset`.
-                It can be used to further restrict the search results. For example, a city
-                widget could be dependent on a country.
-                Key is a name of a field in a form.
-                Value is a name of a field in a model (used in `queryset`).
-
+            data_view (str): URL pattern name for AJAX.
+            data_url (str): Direct URL for AJAX.
+            dependent_fields (dict): Dependent parent fields.
         """
-        super().__init__(attrs, choices)
+        super().__init__(attrs, choices, **kwargs)
 
         self.uuid = str(uuid.uuid4())
         self.field_id = signing.dumps(self.uuid)
         self.data_view = kwargs.pop("data_view", self.data_view)
         self.data_url = kwargs.pop("data_url", self.data_url)
+        self.theme = kwargs.pop("theme", self.theme)
 
         dependent_fields = kwargs.pop("dependent_fields", None)
         if dependent_fields is not None:
             self.dependent_fields = dict(dependent_fields)
         if not (self.data_view or self.data_url):
             raise ValueError('You must either specify "data_view" or "data_url".')
-        self.userGetValTextFuncName = kwargs.pop("userGetValTextFuncName", "null")
 
     def get_url(self):
         """Return URL from instance or by reversing :attr:`.data_view`."""
@@ -287,65 +314,60 @@ class HeavySelect2Mixin:
         return reverse(self.data_view)
 
     def build_attrs(self, base_attrs, extra_attrs=None):
-        """Set select2's AJAX attributes."""
         default_attrs = {
-            "data-ajax--url": self.get_url(),
-            "data-ajax--cache": "true",
-            "data-ajax--type": "GET",
-            "data-minimum-input-length": 2,
+            "data-tom-select": json.dumps(
+                {
+                    "searchField": ["text"],  # Adjust based on your data
+                }
+            ),
+            "data-field_id": self.field_id,
+            "data-url": self.get_url(),
+            "data-widget-type": "heavy",
         }
-
         if self.dependent_fields:
-            default_attrs["data-select2-dependent-fields"] = " ".join(
-                self.dependent_fields
+            default_attrs["data-dependent-fields"] = " ".join(
+                self.dependent_fields.keys()
             )
 
         default_attrs.update(base_attrs)
+        return super().build_attrs(default_attrs, extra_attrs=extra_attrs)
 
-        attrs = super().build_attrs(default_attrs, extra_attrs=extra_attrs)
-
-        attrs["data-field_id"] = self.field_id
-
-        attrs["class"] += " django-select2-heavy"
-        return attrs
-
-    def render(self, *args, **kwargs):
+    def render(self, name, value, attrs=None, renderer=None):
         """Render widget and register it in Django's cache."""
-        output = super().render(*args, **kwargs)
+        output = super().render(name, value, attrs, renderer)
         self.set_to_cache()
         return output
 
     def _get_cache_key(self):
-        return f"{settings.SELECT2_CACHE_PREFIX}{self.uuid}"
+        return f"{settings.TOMSELECT2_CACHE_PREFIX}{self.uuid}"
 
     def set_to_cache(self):
         """
         Add widget object to Django's cache.
 
-        You may need to overwrite this method, to pickle all information
-        that is required to serve your JSON response view.
+        Override this method to serialize necessary information.
         """
         try:
             cache.set(self._get_cache_key(), {"widget": self, "url": self.get_url()})
-        except (PicklingError, AttributeError):
+        except (PicklingError, AttributeError) as err:
             msg = 'You need to overwrite "set_to_cache" or ensure that %s is serialisable.'
-            raise NotImplementedError(msg % self.__class__.__name__)
+            raise NotImplementedError(msg % self.__class__.__name__) from err
 
 
-class HeavySelect2Widget(HeavySelect2Mixin, Select2Widget):
+class HeavyTomSelectWidget(HeavyTomSelectMixin, TomSelectWidget):
     """
-    Select2 widget with AJAX support that registers itself to Django's Cache.
+    Tom Select widget with AJAX support that registers itself to Django's Cache.
 
     Usage example::
 
-        class MyWidget(HeavySelect2Widget):
+        class MyWidget(HeavyTomSelectWidget):
             data_view = 'my_view_name'
 
     or::
 
         class MyForm(forms.Form):
             my_field = forms.ChoiceField(
-                widget=HeavySelect2Widget(
+                widget=HeavyTomSelectWidget(
                     data_url='/url/to/json/response'
                 )
             )
@@ -353,23 +375,32 @@ class HeavySelect2Widget(HeavySelect2Mixin, Select2Widget):
     """
 
 
-class HeavySelect2MultipleWidget(HeavySelect2Mixin, Select2MultipleWidget):
-    """Select2 multi select widget similar to :class:`.HeavySelect2Widget`."""
+class HeavyTomSelectMultipleWidget(HeavyTomSelectMixin, TomSelectMultipleWidget):
+    """Tom Select multi select widget similar to :class:`.HeavyTomSelectWidget`."""
 
 
-class HeavySelect2TagWidget(HeavySelect2Mixin, Select2TagWidget):
-    """Select2 tag widget."""
+class HeavyTomSelectTagWidget(HeavyTomSelectMixin, TomSelectTagWidget):
+    """Tom Select tag widget."""
 
 
 # Auto Heavy widgets
+class ModelTomSelectMixin:
+    """
+    Widget mixin that provides attributes and methods for integrating with Tom Select.
 
+    This mixin configures the widget to work with Tom Select by setting the necessary
+    data attributes and handling AJAX requests for dynamic option loading.
 
-class ModelSelect2Mixin:
-    """Widget mixin that provides attributes and methods for :class:`.AutoResponseView`."""
+    .. tip:: The ModelTomSelect(Multiple)Widget will try
+        to get the QuerySet from the field's choices.
+        Therefore, you don't need to define a QuerySet
+        if you simply apply the widget to a ForeignKey field.
+    """
 
     model = None
     queryset = None
     search_fields = []
+
     """
     Model lookups that are used to filter the QuerySet.
 
@@ -378,7 +409,6 @@ class ModelSelect2Mixin:
         search_fields = [
                 'title__icontains',
             ]
-
     """
 
     max_results = 25
@@ -399,13 +429,15 @@ class ModelSelect2Mixin:
             queryset (django.db.models.query.QuerySet): QuerySet to select choices from.
             search_fields (list): List of model lookup strings.
             max_results (int): Max. JsonResponse view page size.
-
+            theme (str): Theme name for Tom Select.
         """
         self.model = kwargs.pop("model", self.model)
         self.queryset = kwargs.pop("queryset", self.queryset)
         self.search_fields = kwargs.pop("search_fields", self.search_fields)
         self.max_results = kwargs.pop("max_results", self.max_results)
-        defaults = {"data_view": "django_select2:auto-json"}
+        defaults = {
+            "data_view": "django_tomselect2:auto-json",
+        }
         defaults.update(kwargs)
         super().__init__(*args, **defaults)
 
@@ -413,7 +445,7 @@ class ModelSelect2Mixin:
         """
         Add widget's attributes to Django's cache.
 
-        Split the QuerySet, to not pickle the result set.
+        Split the QuerySet to avoid pickling the entire result set.
         """
         queryset = self.get_queryset()
         cache.set(
@@ -425,6 +457,7 @@ class ModelSelect2Mixin:
                 "max_results": int(self.max_results),
                 "url": str(self.get_url()),
                 "dependent_fields": dict(self.dependent_fields),
+                "theme": self.theme,  # Add theme to the cache
             },
         )
 
@@ -433,17 +466,13 @@ class ModelSelect2Mixin:
         Return QuerySet filtered by search_fields matching the passed term.
 
         Args:
-            request (django.http.request.HttpRequest): The request is being passed from
-                the JSON view and can be used to dynamically alter the response queryset.
-            term (str): Search term
+            request (django.http.request.HttpRequest): The request from the widget.
+            term (str): Search term.
             queryset (django.db.models.query.QuerySet): QuerySet to select choices from.
-            **dependent_fields: Dependent fields and their values. If you want to inherit
-                from ModelSelect2Mixin and later call to this method, be sure to pop
-                everything from keyword arguments that is not a dependent field.
+            **dependent_fields: Dependent fields and their values.
 
         Returns:
-            QuerySet: Filtered QuerySet
-
+            QuerySet: Filtered QuerySet.
         """
         if queryset is None:
             queryset = self.get_queryset()
@@ -467,7 +496,7 @@ class ModelSelect2Mixin:
 
         use_distinct |= any(
             lookup_spawns_duplicates(queryset.model._meta, search_spec)
-            for search_spec in dependent_fields.keys()
+            for search_spec in dependent_fields
         )
 
         if use_distinct:
@@ -480,7 +509,6 @@ class ModelSelect2Mixin:
 
         Returns:
             QuerySet: QuerySet of available choices.
-
         """
         if self.queryset is not None:
             queryset = self.queryset
@@ -490,9 +518,9 @@ class ModelSelect2Mixin:
             queryset = self.model._default_manager.all()
         else:
             raise NotImplementedError(
-                "%(cls)s is missing a QuerySet. Define "
-                "%(cls)s.model, %(cls)s.queryset, or override "
-                "%(cls)s.get_queryset()." % {"cls": self.__class__.__name__}
+                f"{self.__class__.__name__} is missing a QuerySet. Define "
+                f"{self.__class__.__name__}.model, {self.__class__.__name__}.queryset, or override "
+                f"{self.__class__.__name__}.get_queryset()."
             )
         return queryset
 
@@ -501,11 +529,21 @@ class ModelSelect2Mixin:
         if self.search_fields:
             return self.search_fields
         raise NotImplementedError(
-            '%s, must implement "search_fields".' % self.__class__.__name__
+            f'{self.__class__.__name__}, must implement "search_fields".'
         )
 
     def optgroups(self, name, value, attrs=None):
-        """Return only selected options and set QuerySet from `ModelChoicesIterator`."""
+        """
+        Return only selected options and set QuerySet from `ModelChoicesIterator`.
+
+        Args:
+            name (str): Field name.
+            value (str): Current value.
+            attrs (dict): HTML attributes.
+
+        Returns:
+            list: Option groups.
+        """
         default = (None, [], 0)
         groups = [default]
         has_selected = False
@@ -518,7 +556,7 @@ class ModelSelect2Mixin:
             c for c in selected_choices if c not in self.choices.field.empty_values
         }
         field_name = self.choices.field.to_field_name or "pk"
-        query = Q(**{"%s__in" % field_name: selected_choices})
+        query = Q(**{f"{field_name}__in": selected_choices})
         for obj in self.choices.queryset.filter(query):
             option_value = self.choices.choice(obj)[0]
             option_label = self.label_from_instance(obj)
@@ -545,7 +583,7 @@ class ModelSelect2Mixin:
 
         Example usage::
 
-            class MyWidget(ModelSelect2Widget):
+            class MyWidget(ModelTomSelectWidget):
                 def label_from_instance(obj):
                     return str(obj.title).upper()
 
@@ -554,7 +592,6 @@ class ModelSelect2Mixin:
 
         Returns:
             str: Option label.
-
         """
         return str(obj)
 
@@ -565,29 +602,23 @@ class ModelSelect2Mixin:
         Can be overridden to change the result returned by
         :class:`.AutoResponseView` for each object.
 
-        The request passed in will correspond to the request sent to the
-        :class:`.AutoResponseView` by the widget.
+        Args:
+            obj (django.db.models.Model): Instance of Django Model.
+            request (django.http.request.HttpRequest): The request sent to the view.
 
-        Example usage::
-
-            class MyWidget(ModelSelect2Widget):
-                def result_from_instance(obj, request):
-                    return {
-                        'id': obj.pk,
-                        'text': self.label_from_instance(obj),
-                        'extra_data': obj.extra_data,
-                    }
+        Returns:
+            dict: Representation of the object for Tom Select.
         """
         return {"id": obj.pk, "text": self.label_from_instance(obj)}
 
 
-class ModelSelect2Widget(ModelSelect2Mixin, HeavySelect2Widget):
+class ModelTomSelectWidget(ModelTomSelectMixin, HeavyTomSelectWidget):
     """
-    Select2 drop in model select widget.
+    Tom Select drop in model select widget.
 
     Example usage::
 
-        class MyWidget(ModelSelect2Widget):
+        class MyWidget(ModelTomSelectWidget):
             search_fields = [
                 'title__icontains',
             ]
@@ -604,30 +635,31 @@ class ModelSelect2Widget(ModelSelect2Mixin, HeavySelect2Widget):
 
         class MyForm(forms.Form):
             my_choice = forms.ChoiceField(
-                widget=ModelSelect2Widget(
+                widget=ModelTomSelectWidget(
                     model=MyOtherModel,
-                    search_fields=['title__icontains']
+                    search_fields=['title__icontains'],
+                    theme="bootstrap5"
                 )
             )
 
-    .. tip:: The ModelSelect2(Multiple)Widget will try
+    .. tip:: The ModelTomSelect(Multiple)Widget will try
         to get the QuerySet from the fields choices.
         Therefore you don't need to define a QuerySet,
         if you just drop in the widget for a ForeignKey field.
     """
 
 
-class ModelSelect2MultipleWidget(ModelSelect2Mixin, HeavySelect2MultipleWidget):
+class ModelTomSelectMultipleWidget(ModelTomSelectMixin, HeavyTomSelectMultipleWidget):
     """
-    Select2 drop in model multiple select widget.
+    Tom Select drop in model multiple select widget.
 
-    Works just like :class:`.ModelSelect2Widget` but for multi select.
+    Works just like :class:`.ModelTomSelectWidget` but for multi select.
     """
 
 
-class ModelSelect2TagWidget(ModelSelect2Mixin, HeavySelect2TagWidget):
+class ModelTomSelectTagWidget(ModelTomSelectMixin, HeavyTomSelectTagWidget):
     """
-    Select2 model widget with tag support.
+    Tom Select model widget with tag support.
 
     This it not a simple drop in widget.
     It requires to implement you own :func:`.value_from_datadict`
@@ -635,7 +667,7 @@ class ModelSelect2TagWidget(ModelSelect2Mixin, HeavySelect2TagWidget):
 
     Example::
 
-        class MyModelSelect2TagWidget(ModelSelect2TagWidget):
+        class MyModelTomSelectTagWidget(ModelTomSelectTagWidget):
             queryset = MyModel.objects.all()
 
             def value_from_datadict(self, data, files, name):

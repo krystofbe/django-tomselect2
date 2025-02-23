@@ -13,7 +13,7 @@ INSTALLED_APPS = (
     "django.contrib.sessions",
     "django.contrib.staticfiles",
     "django.contrib.admin",
-    "django_select2",
+    "django_tomselect2",
     "tests.testapp",
 )
 
@@ -38,7 +38,7 @@ TEMPLATES = [
     },
 ]
 
-SECRET_KEY = "123456"
+SECRET_KEY = "123456"  # noqa: S105
 
 if django.VERSION < (4, 0):
     USE_L10N = True

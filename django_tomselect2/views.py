@@ -22,7 +22,7 @@ class AutoResponseView(BaseListView):
         Return a :class:`.django.http.JsonResponse`.
 
         Each result will be rendered by the widget's
-        :func:`django_select2.forms.ModelSelect2Mixin.result_from_instance` method.
+        :func:`django_tomselect2.forms.ModelTomSelectMixin.result_from_instance` method.
 
         Example::
 
@@ -49,7 +49,7 @@ class AutoResponseView(BaseListView):
                 ],
                 "more": context["page_obj"].has_next(),
             },
-            encoder=import_string(settings.SELECT2_JSON_ENCODER),
+            encoder=import_string(settings.TOMSELECT2_JSON_ENCODER),
         )
 
     def get_queryset(self):
@@ -85,7 +85,7 @@ class AutoResponseView(BaseListView):
             Http404: If if the widget can not be found or no id is provided.
 
         Returns:
-            ModelSelect2Mixin: Widget from cache.
+            ModelTomSelectMixin: Widget from cache.
 
         """
         field_id = self.kwargs.get("field_id", self.request.GET.get("field_id", None))
@@ -93,10 +93,10 @@ class AutoResponseView(BaseListView):
             raise Http404('No "field_id" provided.')
         try:
             key = signing.loads(field_id)
-        except BadSignature:
-            raise Http404('Invalid "field_id".')
+        except BadSignature as err:
+            raise Http404('Invalid "field_id".') from err
         else:
-            cache_key = f"{settings.SELECT2_CACHE_PREFIX}{key}"
+            cache_key = f"{settings.TOMSELECT2_CACHE_PREFIX}{key}"
             widget_dict = cache.get(cache_key)
             if widget_dict is None:
                 raise Http404("field_id not found")

@@ -1,12 +1,11 @@
 name: 🐛 Bug
 description: Report a technical issue.
-title: '🐛 '
+title: "🐛 "
 labels:
   - bug
 assignees:
-  - codingjoe
+  - krystofbe
 body:
-
   - type: markdown
     attributes:
       value: |
@@ -18,7 +17,7 @@ body:
       value: |
         ## Security issues
         Please do not report security issues here.
-        Instead, disclose them as described in our [security policy](https://github.com/codingjoe/django-select2/security).
+        Instead, disclose them as described in our [security policy](https://github.com/krystofbe/django-tomselect2/security).
 
   - type: textarea
     id: bug-description

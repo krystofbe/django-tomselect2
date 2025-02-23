@@ -2,8 +2,6 @@ import random
 import string
 
 import pytest
-from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
 
 
 def pytest_configure(config):
@@ -23,19 +21,6 @@ def random_name(n):
         .split(" ")
     )
     return "-".join([x.capitalize() for x in words])
-
-
-@pytest.fixture(scope="session")
-def driver():
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True
-    try:
-        b = webdriver.Chrome(options=chrome_options)
-    except WebDriverException as e:
-        pytest.skip(str(e))
-    else:
-        yield b
-        b.quit()
 
 
 @pytest.fixture

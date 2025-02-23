@@ -1,25 +1,27 @@
+.. note::
+    Special thanks to Johannes Maron (codingjoe), creator of django-select2, whose work inspired much of what is presented here.
+
 .. include:: ../README.rst
 
 Installation
 ------------
 
-Install ``django-select2``::
+Install django-tomselect2:
 
-    python3 -m pip install django-select2
+.. code-block:: console
 
-Add ``django_select2`` to your ``INSTALLED_APPS`` in your project settings.
-Since version 8, please ensure that Django's admin app is enabled too:
+    python3 -m pip install django-tomselect2
+
+Add django_tomselect2 to your INSTALLED_APPS in your project settings.
 
 .. code-block:: python
 
     INSTALLED_APPS = [
-        # other django apps…
-        'django.contrib.admin',
         # other 3rd party apps…
-        'django_select2',
+        'django_tomselect2',
     ]
 
-Add ``django_select`` to your URL root configuration:
+Add django_tomselect2 to your URL root configuration:
 
 .. code-block:: python
 
@@ -27,26 +29,24 @@ Add ``django_select`` to your URL root configuration:
 
     urlpatterns = [
         # other patterns…
-        path("select2/", include("django_select2.urls")),
+        path("tomselect2/", include("django_tomselect2.urls")),
         # other patterns…
     ]
 
+The Model-widgets require a **persistent** cache backend across all application servers.
+This is because the widget needs to store metadata for fetching results based on user input.
 
-The :ref:`Model` -widgets require a **persistent** cache backend across
-all application servers. This is because the widget needs to store
-meta data to be able to fetch the results based on the user input.
+**This means that the DummyCache backend will not work!**
 
-**This means that the** :class:`.DummyCache` **backend will not work!**
+The default cache backend is LocMemCache, which is persistent only across a single node.
+For projects on a single server, this works fine, but scaling to multiple servers
+will cause issues.
 
-The default cache backend is :class:`.LocMemCache`, which is persistent
-across a single node. For projects with a single application server
-this will work fine, however you will run into issues when
-you scale up into multiple servers.
+Below is an example setup using Redis, which works well for multi-server setups:
 
-Below is an example setup using Redis, which is a solution that
-works for multi-server setups:
+Make sure you have a Redis server up and running:
 
-Make sure you have a Redis server up and running::
+.. code-block:: console
 
     # Debian
     sudo apt-get install redis-server
@@ -57,13 +57,13 @@ Make sure you have a Redis server up and running::
     # install Redis python client
     python3 -m pip install django-redis
 
-Next, add the cache configuration to your ``settings.py`` as follows:
+Next, add the cache configuration to your settings.py as follows:
 
 .. code-block:: python
 
     CACHES = {
-        # … default cache config and others
-        "select2": {
+        # ... default cache config and others
+        "tomselect": {
             "BACKEND": "django_redis.cache.RedisCache",
             "LOCATION": "redis://127.0.0.1:6379/2",
             "OPTIONS": {
@@ -72,21 +72,22 @@ Next, add the cache configuration to your ``settings.py`` as follows:
         }
     }
 
-    # Tell select2 which cache configuration to use:
-    SELECT2_CACHE_BACKEND = "select2"
+    # Tell django-tomselect2 which cache configuration to use:
+    TOMSELECT2_CACHE_BACKEND = "tomselect"
 
 .. note::
-    A custom timeout for your cache backend, will serve as an indirect session limit.
-    Auto select fields will stop working after, once the cache has expired.
-    It's recommended to use a dedicated cache database with an adequate
-    cache replacement policy such as LRU, FILO, etc.
+    A custom timeout for your cache backend will act as an indirect session limit.
+    Once the cache expires, dynamic Tom Select fields will stop working.
+    It is recommended to use a dedicated cache database with a sensible
+    replacement policy (LRU, FIFO, etc.).
 
 
 External Dependencies
 ---------------------
 
--  jQuery is not included in the package since it is
-   expected that in most scenarios this would already be available.
+-  jQuery is **not** required by Tom Select itself, but if you have existing scripts
+   or transitional code using jQuery, make sure to load it before your form JS
+   if needed. By default, Tom Select is purely vanilla JavaScript.
 
 
 Quick Start
@@ -94,8 +95,8 @@ Quick Start
 
 Here is a quick example to get you started:
 
-First make sure you followed the installation instructions above.
-Once everything is setup, let's start with a simple example.
+First, ensure you followed the installation instructions above.
+Once everything is set up, let's look at a simple example.
 
 We have the following model:
 
@@ -105,36 +106,34 @@ We have the following model:
     from django.conf import settings
     from django.db import models
 
-
     class Book(models.Model):
         author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-        co_authors = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='co_authored_by')
+        co_authors = models.ManyToManyField(
+            settings.AUTH_USER_MODEL,
+            related_name='co_authored_by'
+        )
 
 
-Next, we create a model form with custom Select2 widgets.
+Next, we create a model form with custom Tom Select widgets.
 
 .. code-block:: python
 
     # forms.py
     from django import forms
-    from django_select2 import forms as s2forms
-
+    from django_tomselect2 import forms as ts2forms
     from . import models
 
-
-    class AuthorWidget(s2forms.ModelSelect2Widget):
+    class AuthorWidget(ts2forms.ModelTomSelectWidget):
         search_fields = [
             "username__icontains",
             "email__icontains",
         ]
 
-
-    class CoAuthorsWidget(s2forms.ModelSelect2MultipleWidget):
+    class CoAuthorsWidget(ts2forms.ModelTomSelectMultipleWidget):
         search_fields = [
             "username__icontains",
             "email__icontains",
         ]
-
 
     class BookForm(forms.ModelForm):
         class Meta:
@@ -145,41 +144,40 @@ Next, we create a model form with custom Select2 widgets.
                 "co_authors": CoAuthorsWidget,
             }
 
-A simple class based view will do, to render your form:
+
+A simple class-based view to render your form:
 
 .. code-block:: python
 
     # views.py
     from django.views import generic
-
     from . import forms, models
-
 
     class BookCreateView(generic.CreateView):
         model = models.Book
         form_class = forms.BookForm
         success_url = "/"
 
-Make sure to add the view to your ``urls.py``:
+
+Make sure to add the view to your urls.py:
 
 .. code-block:: python
 
     # urls.py
     from django.urls import include, path
-
     from . import views
 
     urlpatterns = [
-        # … other patterns
-        path("select2/", include("django_select2.urls")),
-        # … other patterns
+        # other patterns
+        path("tomselect2/", include("django_tomselect2.urls")),
+        # other patterns
         path("book/create", views.BookCreateView.as_view(), name="book-create"),
     ]
 
 
-Finally, we need a little template, ``myapp/templates/myapp/book_form.html``
+Finally, we need a simple template, myapp/templates/myapp/book_form.html:
 
-.. code-block:: HTML
+.. code-block:: html
 
     <!DOCTYPE html>
     <html lang="en">
@@ -187,7 +185,9 @@ Finally, we need a little template, ``myapp/templates/myapp/book_form.html``
         <title>Create Book</title>
         {{ form.media.css }}
         <style>
-            input, select {width: 100%}
+            input, select {
+                width: 100%;
+            }
         </style>
     </head>
     <body>
@@ -195,22 +195,22 @@ Finally, we need a little template, ``myapp/templates/myapp/book_form.html``
         <form method="POST">
             {% csrf_token %}
             {{ form.as_p }}
-            <input type="submit">
+            <input type="submit" value="Submit">
         </form>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         {{ form.media.js }}
     </body>
     </html>
 
-Done - enjoy the wonders of Select2!
+Done—enjoy the wonders of Tom Select!
 
 
 Changelog
 ---------
 
-See `Github releases`_.
+See Github releases:
+https://github.com/krystofbe/django-tomselect2/releases
 
-.. _Github releases: https://github.com/codingjoe/django-select2/releases
+
 
 All Contents
 ============
@@ -221,7 +221,7 @@ Contents:
    :maxdepth: 2
    :glob:
 
-   django_select2
+   django_tomselect2
    extra
    CONTRIBUTING
 

@@ -2,10 +2,10 @@ import json
 
 from django.utils.encoding import smart_str
 
-from django_select2.cache import cache
-from django_select2.forms import ModelSelect2Widget
+from django_tomselect2.cache import cache
+from django_tomselect2.forms import ModelTomSelectWidget
 from tests.testapp.forms import (
-    AlbumModelSelect2WidgetForm,
+    AlbumModelTomSelectWidgetForm,
     ArtistCustomTitleWidget,
     CityForm,
 )
@@ -20,10 +20,10 @@ except ImportError:
 class TestAutoResponseView:
     def test_get(self, client, artists):
         artist = artists[0]
-        form = AlbumModelSelect2WidgetForm()
+        form = AlbumModelTomSelectWidgetForm()
         assert form.as_p()
         field_id = form.fields["artist"].widget.field_id
-        url = reverse("django_select2:auto-json")
+        url = reverse("django_tomselect2:auto-json")
         response = client.get(url, {"field_id": field_id, "term": artist.title})
         assert response.status_code == 200
         data = json.loads(response.content.decode("utf-8"))
@@ -32,26 +32,26 @@ class TestAutoResponseView:
 
     def test_no_field_id(self, client, artists):
         artist = artists[0]
-        url = reverse("django_select2:auto-json")
+        url = reverse("django_tomselect2:auto-json")
         response = client.get(url, {"term": artist.title})
         assert response.status_code == 404
 
     def test_wrong_field_id(self, client, artists):
         artist = artists[0]
-        url = reverse("django_select2:auto-json")
+        url = reverse("django_tomselect2:auto-json")
         response = client.get(url, {"field_id": 123, "term": artist.title})
         assert response.status_code == 404
 
     def test_field_id_not_found(self, client, artists):
         artist = artists[0]
         field_id = "not-exists"
-        url = reverse("django_select2:auto-json")
+        url = reverse("django_tomselect2:auto-json")
         response = client.get(url, {"field_id": field_id, "term": artist.title})
         assert response.status_code == 404
 
     def test_pagination(self, genres, client):
-        url = reverse("django_select2:auto-json")
-        widget = ModelSelect2Widget(
+        url = reverse("django_tomselect2:auto-json")
+        widget = ModelTomSelectWidget(
             max_results=10, model=Genre, search_fields=["title__icontains"]
         )
         widget.render("name", None)
@@ -71,9 +71,9 @@ class TestAutoResponseView:
         assert data["more"] is False
 
     def test_label_from_instance(self, artists, client):
-        url = reverse("django_select2:auto-json")
+        url = reverse("django_tomselect2:auto-json")
 
-        form = AlbumModelSelect2WidgetForm()
+        form = AlbumModelTomSelectWidgetForm()
         form.fields["artist"].widget = ArtistCustomTitleWidget()
         assert form.as_p()
         field_id = form.fields["artist"].widget.field_id
@@ -89,7 +89,7 @@ class TestAutoResponseView:
         ]
 
     def test_result_from_instance(self, cities, client):
-        url = reverse("django_select2:auto-json")
+        url = reverse("django_tomselect2:auto-json")
 
         form = CityForm()
         assert form.as_p()
@@ -107,13 +107,13 @@ class TestAutoResponseView:
 
     def test_url_check(self, client, artists):
         artist = artists[0]
-        form = AlbumModelSelect2WidgetForm()
+        form = AlbumModelTomSelectWidgetForm()
         assert form.as_p()
         field_id = form.fields["artist"].widget.field_id
         cache_key = form.fields["artist"].widget._get_cache_key()
         widget_dict = cache.get(cache_key)
         widget_dict["url"] = "yet/another/url"
         cache.set(cache_key, widget_dict)
-        url = reverse("django_select2:auto-json")
+        url = reverse("django_tomselect2:auto-json")
         response = client.get(url, {"field_id": field_id, "term": artist.title})
         assert response.status_code == 404

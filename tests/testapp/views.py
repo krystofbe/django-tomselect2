@@ -3,9 +3,22 @@ import json
 from django.http import HttpResponse
 from django.views.generic import FormView
 
+from tests.testapp.forms import AlbumModelTomSelectWidgetForm
+
 
 class TemplateFormView(FormView):
     template_name = "form.html"
+
+
+class AlbumModelTomSelectWidgetView(FormView):
+    template_name = "form.html"
+    form_class = AlbumModelTomSelectWidgetForm
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["artist"] = self.request.GET.get("artist")
+        initial["primary_genre"] = self.request.GET.get("primary_genre")
+        return initial
 
 
 def heavy_data_1(request):

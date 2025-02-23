@@ -1,16 +1,18 @@
 [build-system]
-requires = ["flit_core>=3.2", "flit_scm", "wheel"]
-build-backend = "flit_scm:buildapi"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [project]
-name = "django-select2"
+name = "django-tomselect2"
+dynamic = ["version"]
+description = "Django integration for Tom Select autocomplete widget"
+readme = "README.rst"
+license = "MIT"
 authors = [
   { name = "Johannes Maron", email = "johannes@maron.family" },
+  { name = "Krystof Beuermann", email = "krystof@blackbox.ms" },
 ]
-readme = "README.rst"
-license = { file = "LICENSE" }
-keywords = ["Django", "select2", "autocomplete", "typeahead"]
-dynamic = ["version", "description"]
+keywords = ["Django", "tom-select", "autocomplete", "typeahead"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "License :: OSI Approved :: MIT License",
@@ -20,72 +22,164 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Framework :: Django",
-  "Framework :: Django :: 3.2",
-  "Framework :: Django :: 4.1",
   "Framework :: Django :: 4.2",
+  "Framework :: Django :: 5.0",
+  "Framework :: Django :: 5.1",
   "Topic :: Software Development",
 ]
-requires-python = ">=3.8"
-dependencies = [
-  "django>=3.2",
-  "django-appconf>=0.6.0"
-]
+requires-python = ">=3.10"
+dependencies = ["django>=4.2", "django-appconf>=0.6.0"]
+
+[project.urls]
+Homepage = "https://github.com/krystofbe/django-tomselect2"
+Documentation = "https://django-tomselect2.rtfd.io/"
+Repository = "https://github.com/krystofbe/django-tomselect2"
+Changelog = "https://github.com/krystofbe/django-tomselect2/releases"
+"Issue Tracker" = "https://github.com/krystofbe/django-tomselect2/issues"
 
 [project.optional-dependencies]
 test = [
-  "pytest",
-  "pytest-cov",
-  "pytest-django",
-  "selenium",
+  "pytest>=7.0",
+  "pytest-cov>=4.0",
+  "pytest-django>=4.5",
+  "playwright>=1.40",
+  "pytest-playwright>=0.4",
 ]
-selenium = [
-  "selenium",
+dev = [
+  "django-tomselect2[test]",
+  "ruff>=0.6.0",
+  "mypy>=1.8",
+  "pre-commit>=3.6",
+  "django-stubs>=4.2",
 ]
 docs = [
-  "sphinx",
+  "sphinx>=7.0",
+  "myst-parser>=2.0",
+  "sphinx-rtd-theme>=2.0",
+  "sphinx-autobuild>=2024.2",
+]
+example = [
+  "redis>=5.0",
+  "django-crispy-forms>=2.0",
+  "crispy-bootstrap5>=2024.2",
 ]
 
-[project.urls]
-Project-URL = "https://github.com/codingjoe/django-select2"
-Changelog = "https://github.com/codingjoe/django-select2/releases"
-Source = "https://github.com/codingjoe/django-select2"
-Documentation = "https://django-select2.rtfd.io/"
-Issue-Tracker = "https://github.com/codingjoe/django-select2/issues"
+# Hatch version configuration
+[tool.hatch.version]
+source = "vcs"
 
-[tool.flit.module]
-name = "django_select2"
+[tool.hatch.build.hooks.vcs]
+version-file = "django_tomselect2/_version.py"
 
-[tool.setuptools_scm]
-write_to = "django_select2/_version.py"
+# Ruff configuration (replaces black, isort, flake8, bandit)
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+fix = true
 
+[tool.ruff.lint]
+# Add these modern rule sets
+select = [
+  "E",
+  "W",     # pycodestyle
+  "F",     # pyflakes
+  "I",     # isort
+  "B",     # flake8-bugbear
+  "C4",    # flake8-comprehensions
+  "UP",    # pyupgrade
+  "S",     # bandit (security)
+  "DJ",    # flake8-django
+  "PIE",   # flake8-pie
+  "T20",   # flake8-print
+  "SIM",   # flake8-simplify
+  "ASYNC", # async-related
+  "PERF",  # performance hints
+  "FURB",  # refurb (modernization)
+]
+
+ignore = [
+  "E203", # whitespace before ':'
+  "E501", # line too long (handled by line-length)
+  "S101", # use of assert (OK in tests)
+  "S311", # random generator not cryptographically secure
+]
+
+[tool.ruff.format]
+# Modern formatting options
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+  "S101", # assert allowed in tests
+  "T20",  # print allowed in tests
+]
+"example/**/*.py" = [
+  "T20", # print allowed in examples
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["django_tomselect2"]
+force-single-line = false
+combine-as-imports = true
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.10"
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+plugins = ["mypy_django_plugin.main"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[tool.django-stubs]
+django_settings_module = "tests.testapp.settings"
+
+# Pytest configuration
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "--cov --tb=short -rxs"
+minversion = "7.0"
+addopts = [
+  "--cov=django_tomselect2",
+  "--cov-report=html",
+  "--cov-report=term-missing",
+  "--tb=short",
+  "-rxs",
+  "--strict-markers",
+]
 testpaths = ["tests"]
 DJANGO_SETTINGS_MODULE = "tests.testapp.settings"
 filterwarnings = ["ignore::PendingDeprecationWarning", "error::RuntimeWarning"]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "integration: marks tests as integration tests",
+  "playwright: marks tests that require Playwright browser automation",
+]
 
+# Coverage configuration
 [tool.coverage.run]
-source = ["django_select2"]
+source = ["django_tomselect2"]
+omit = ["**/migrations/**", "**/tests/**", "**/venv/**", "**/.venv/**"]
 
 [tool.coverage.report]
 show_missing = true
-
-[tool.isort]
-atomic = true
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-known_first_party = "django_select2, tests"
-default_section = "THIRDPARTY"
-combine_as_imports = true
-
-[tool.pydocstyle]
-add_ignore = "D1"
+skip_covered = false
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]

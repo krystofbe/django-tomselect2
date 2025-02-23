@@ -3,6 +3,13 @@ from django.db import models
 
 class Genre(models.Model):
     title = models.CharField(max_length=50)
+    artist = models.ForeignKey(
+        "Artist",
+        on_delete=models.CASCADE,
+        related_name="primary_genres",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ("title",)
@@ -69,3 +76,6 @@ class City(models.Model):
 
 class Groupie(models.Model):
     obsession = models.ForeignKey(Artist, to_field="title", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.obsession)

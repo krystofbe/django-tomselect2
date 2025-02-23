@@ -13,8 +13,8 @@ brew install redis
 Now, to run the sample app, please execute:
 
 ```
-git clone https://github.com/codingjoe/django-select2.git
-cd django-select2/example
+git clone https://github.com/krystofbe/django-tomselect2.git
+cd django-tomselect2/example
 python3 -m pip install -r requirements.txt
 python3 manage.py migrate
 python3 manage.py createsuperuser

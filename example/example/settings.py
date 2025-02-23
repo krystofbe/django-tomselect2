@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 # See https://docs.djangoproject.com/en/dev/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "kstexlapcf3lucx@47mmxsu9-9eixia+6n97aw)4$qo&!laxad"  # nosec
+SECRET_KEY = "kstexlapcf3lucx@47mmxsu9-9eixia+6n97aw)4$qo&!laxad"  # nosec  # noqa: S105
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_select2",
+    "django_tomselect2",
+    "crispy_forms",
+    "crispy_bootstrap5",
     "example",
 ]
 
@@ -120,10 +122,15 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/1",
     },
-    "select2": {
+    "tom-select": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/2",
     },
 }
 
-SELECT2_CACHE_BACKEND = "select2"
+TOMSELECT2_CACHE_BACKEND = "tom-select"
+TOMSELECT2_THEME = "bootstrap5"
+TOMSELECT2_TOM_SELECT_SETTINGS = {"maxItems": 2}
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
