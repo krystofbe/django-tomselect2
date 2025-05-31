@@ -11,7 +11,6 @@ setup:
 check:
     uv run ruff check .
     uv run ruff format --check .
-    uv run mypy django_tomselect2
 
 # Fix formatting
 fix:

@@ -105,9 +105,9 @@ class TestTomSelectMixin:
 
         # Verify each custom setting is present in rendered data
         for key, value in custom_settings.items():
-            assert (
-                rendered_settings[key] == value
-            ), f"Expected {key}={value} in data-tom-select"
+            assert rendered_settings[key] == value, (
+                f"Expected {key}={value} in data-tom-select"
+            )
 
 
 class TestTomSelectTagMixin:
@@ -129,18 +129,18 @@ class TestTomSelectTagMixin:
         assert data_tom_select.get("create") is True, "Expected 'create' to be True"
         assert data_tom_select.get("delimiter") == ",", "Expected delimiter to be ','"
         assert data_tom_select.get("persist") is False, "Expected 'persist' to be False"
-        assert (
-            data_tom_select.get("dropdownParent") == "body"
-        ), "Expected 'dropdownParent' to be 'body'"
-        assert (
-            data_tom_select.get("hideSelected") is False
-        ), "Expected 'hideSelected' to be False"
-        assert (
-            data_tom_select.get("placeholder") == "Add tags"
-        ), "Expected placeholder to be 'Add tags'"
-        assert (
-            built_attrs.get("class") == "test-class"
-        ), "Expected class to be 'test-class'"
+        assert data_tom_select.get("dropdownParent") == "body", (
+            "Expected 'dropdownParent' to be 'body'"
+        )
+        assert data_tom_select.get("hideSelected") is False, (
+            "Expected 'hideSelected' to be False"
+        )
+        assert data_tom_select.get("placeholder") == "Add tags", (
+            "Expected placeholder to be 'Add tags'"
+        )
+        assert built_attrs.get("class") == "test-class", (
+            "Expected class to be 'test-class'"
+        )
 
     def test_create_new_tag_attributes(self):
         """
@@ -188,9 +188,9 @@ class TestTomSelectTagMixin:
 
         data_tom_select = json.loads(built_attrs["data-tom-select"])
 
-        assert (
-            data_tom_select.get("dropdownParent") == "body"
-        ), "Expected 'dropdownParent' to be 'body'"
+        assert data_tom_select.get("dropdownParent") == "body", (
+            "Expected 'dropdownParent' to be 'body'"
+        )
 
 
 class TestTomSelectWidget(StaticLiveServerTestCase):
@@ -296,9 +296,9 @@ class TestTomSelectWidget(StaticLiveServerTestCase):
         tom_select_data = json.loads(select_element.get_attribute("data-tom-select"))
 
         # Verify placeholder in tom-select configuration
-        assert (
-            tom_select_data["placeholder"] == ""
-        ), "Expected empty placeholder in tom-select configuration"
+        assert tom_select_data["placeholder"] == "", (
+            "Expected empty placeholder in tom-select configuration"
+        )
 
         # Verify placeholder in data attribute
         placeholder_attr = select_element.get_attribute("data-placeholder")
@@ -317,9 +317,9 @@ class TestTomSelectWidget(StaticLiveServerTestCase):
             data_tom_select = select_element.get_attribute("data-tom-select")
             tom_select_config = json.loads(data_tom_select)
 
-            assert (
-                tom_select_config["theme"] == "default"
-            ), f"Expected theme 'default' in data-tom-select configuration, got {tom_select_config.get('theme')}"
+            assert tom_select_config["theme"] == "default", (
+                f"Expected theme 'default' in data-tom-select configuration, got {tom_select_config.get('theme')}"
+            )
 
 
 class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
@@ -374,9 +374,9 @@ class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
         expect(selected_items).to_have_count(len(options_to_select))
         selected_texts = selected_items.all_inner_texts()
         expected_texts = ["One", "Two"]
-        assert (
-            selected_texts == expected_texts
-        ), f"Expected selected items {expected_texts}, got {selected_texts}"
+        assert selected_texts == expected_texts, (
+            f"Expected selected items {expected_texts}, got {selected_texts}"
+        )
 
     def test_remove_selected_items(self):
         """
@@ -410,9 +410,9 @@ class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
         expect(selected_items).to_have_count(2)
         selected_texts = selected_items.all_inner_texts()
         expected_texts = ["One", "Three"]
-        assert (
-            selected_texts == expected_texts
-        ), f"Expected selected items {expected_texts}, got {selected_texts}"
+        assert selected_texts == expected_texts, (
+            f"Expected selected items {expected_texts}, got {selected_texts}"
+        )
 
     def test_max_items_limit(self):
         """
@@ -439,9 +439,9 @@ class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
             expect(selected_items).to_have_count(2)
             selected_texts = selected_items.all_inner_texts()
             expected_texts = ["One", "Two"]
-            assert (
-                selected_texts == expected_texts
-            ), f"Expected selected items {expected_texts}, got {selected_texts}"
+            assert selected_texts == expected_texts, (
+                f"Expected selected items {expected_texts}, got {selected_texts}"
+            )
 
             # Try to open the dropdown again
             tom_select_control.click()
@@ -472,9 +472,9 @@ class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
         expect(selected_items).to_have_count(2)
         selected_texts = selected_items.all_inner_texts()
         expected_texts = ["Two", "Four"]
-        assert (
-            selected_texts == expected_texts
-        ), f"Expected selected items {expected_texts}, got {selected_texts}"
+        assert selected_texts == expected_texts, (
+            f"Expected selected items {expected_texts}, got {selected_texts}"
+        )
 
 
 class TestHeavyTomSelectMixin:
@@ -494,9 +494,9 @@ class TestHeavyTomSelectMixin:
         widget = HeavyTomSelectWidget(data_view="mock_view")
         expected_url = "/mocked-url/"
 
-        assert (
-            widget.get_url() == expected_url
-        ), "AJAX URL should be the reversed data_view URL."
+        assert widget.get_url() == expected_url, (
+            "AJAX URL should be the reversed data_view URL."
+        )
 
         # Ensure reverse was called with the correct view name
         mock_reverse.assert_called_once_with("mock_view")
@@ -508,9 +508,9 @@ class TestHeavyTomSelectMixin:
         widget = HeavyTomSelectWidget(data_url="/custom-data-url/")
         expected_url = "/custom-data-url/"
 
-        assert (
-            widget.get_url() == expected_url
-        ), "AJAX URL should be the provided data_url."
+        assert widget.get_url() == expected_url, (
+            "AJAX URL should be the provided data_url."
+        )
 
     @patch("django_tomselect2.forms.reverse")
     def test_dependent_fields_handling(self, mock_reverse):
@@ -527,9 +527,9 @@ class TestHeavyTomSelectMixin:
         built_attrs = widget.build_attrs({})
         expected_dependent_fields = "country"
 
-        assert (
-            built_attrs.get("data-dependent-fields") == expected_dependent_fields
-        ), "Dependent fields should be correctly set in attributes."
+        assert built_attrs.get("data-dependent-fields") == expected_dependent_fields, (
+            "Dependent fields should be correctly set in attributes."
+        )
 
     @patch("django_tomselect2.forms.reverse")
     def test_cache_registration(self, mock_reverse):
@@ -546,15 +546,15 @@ class TestHeavyTomSelectMixin:
         cache_key = widget._get_cache_key()
         cached_data = cache.get(cache_key)
 
-        assert (
-            cached_data is not None
-        ), "Widget should be registered in the cache after rendering."
-        assert (
-            cached_data["url"] == "/mocked-url/"
-        ), "Cached URL should match the reversed data_view URL."
-        assert (
-            cached_data["widget"].__class__ == HeavyTomSelectWidget
-        ), "Cached widget should be an instance of HeavyTomSelectWidget."
+        assert cached_data is not None, (
+            "Widget should be registered in the cache after rendering."
+        )
+        assert cached_data["url"] == "/mocked-url/", (
+            "Cached URL should match the reversed data_view URL."
+        )
+        assert cached_data["widget"].__class__ == HeavyTomSelectWidget, (
+            "Cached widget should be an instance of HeavyTomSelectWidget."
+        )
 
     def test_field_id_generation(self):
         """
@@ -574,15 +574,15 @@ class TestHeavyTomSelectMixin:
         original_uuid1 = signing.loads(signed_field_id1)
         original_uuid2 = signing.loads(signed_field_id2)
 
-        assert (
-            original_uuid1 == widget1.uuid
-        ), "field_id should correctly contain the signed UUID for widget1."
-        assert (
-            original_uuid2 == widget2.uuid
-        ), "field_id should correctly contain the signed UUID for widget2."
-        assert (
-            original_uuid1 != original_uuid2
-        ), "Each widget's field_id should correspond to its unique UUID."
+        assert original_uuid1 == widget1.uuid, (
+            "field_id should correctly contain the signed UUID for widget1."
+        )
+        assert original_uuid2 == widget2.uuid, (
+            "field_id should correctly contain the signed UUID for widget2."
+        )
+        assert original_uuid1 != original_uuid2, (
+            "Each widget's field_id should correspond to its unique UUID."
+        )
 
     @pytest.fixture
     def mock_queryset(self):
@@ -695,24 +695,24 @@ class TestModelTomSelectMixin:
 
         # Retrieve the cached data
         cached_data = cache.get(cache_key)
-        assert (
-            cached_data is not None
-        ), "Widget should be registered in the cache after rendering."
+        assert cached_data is not None, (
+            "Widget should be registered in the cache after rendering."
+        )
 
         # Verify cached URL
-        assert (
-            cached_data["url"] == "/mocked-url/"
-        ), "Cached URL should match the reversed data_view URL."
+        assert cached_data["url"] == "/mocked-url/", (
+            "Cached URL should match the reversed data_view URL."
+        )
 
         # Verify cached attributes
 
         # Verify other cached configurations
-        assert cached_data["search_fields"] == tuple(
-            widget.search_fields
-        ), "Search fields should be cached correctly."
-        assert (
-            cached_data["max_results"] == widget.max_results
-        ), "Max results should be cached correctly."
+        assert cached_data["search_fields"] == tuple(widget.search_fields), (
+            "Search fields should be cached correctly."
+        )
+        assert cached_data["max_results"] == widget.max_results, (
+            "Max results should be cached correctly."
+        )
 
 
 class TestModelTomSelectWidget(StaticLiveServerTestCase):
@@ -743,15 +743,15 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
         primary_genre_select = self.page.query_selector("#id_primary_genre-ts-control")
 
         assert artist_select is not None, "Artist TomSelect widget should be rendered."
-        assert (
-            primary_genre_select is not None
-        ), "Primary Genre TomSelect widget should be rendered."
-        assert (
-            artist_select.get_attribute("placeholder") == ""
-        ), "Artist widget placeholder should be empty."
-        assert (
-            primary_genre_select.get_attribute("placeholder") == ""
-        ), "Primary Genre widget placeholder should be empty."
+        assert primary_genre_select is not None, (
+            "Primary Genre TomSelect widget should be rendered."
+        )
+        assert artist_select.get_attribute("placeholder") == "", (
+            "Artist widget placeholder should be empty."
+        )
+        assert primary_genre_select.get_attribute("placeholder") == "", (
+            "Primary Genre widget placeholder should be empty."
+        )
 
     def test_ajax_search(self):
         """
@@ -787,12 +787,12 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
             "#id_primary_genre + .ts-wrapper .item"
         )
 
-        assert (
-            artist_selected.inner_text() == "ARTIST 1"
-        ), "Artist widget should display the initial selected value."
-        assert (
-            primary_genre_selected.inner_text() == "GENRE 2"
-        ), "Primary Genre widget should display the initial selected value."
+        assert artist_selected.inner_text() == "ARTIST 1", (
+            "Artist widget should display the initial selected value."
+        )
+        assert primary_genre_selected.inner_text() == "GENRE 2", (
+            "Primary Genre widget should display the initial selected value."
+        )
 
     def test_dependent_field_filtering(self):
         """
@@ -839,9 +839,9 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
         option_texts = [option.text_content().strip() for option in filtered_options]
 
         assert len(option_texts) == 2, "Should only show the two filtered genres"
-        assert all(
-            text.startswith("FILTERED GENRE") for text in option_texts
-        ), "Primary Genre options should be filtered based on selected Artist."
+        assert all(text.startswith("FILTERED GENRE") for text in option_texts), (
+            "Primary Genre options should be filtered based on selected Artist."
+        )
 
 
 class TestModelTomSelectTagWidget(StaticLiveServerTestCase):

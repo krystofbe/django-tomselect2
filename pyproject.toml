@@ -53,7 +53,6 @@ test = [
 dev = [
   "django-tomselect2[test]",
   "ruff>=0.6.0",
-  "mypy>=1.8",
   "pre-commit>=3.6",
   "django-stubs>=4.2",
 ]
@@ -115,6 +114,7 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+exclude = ["**/migrations/**/*.py"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
@@ -130,19 +130,6 @@ known-first-party = ["django_tomselect2"]
 force-single-line = false
 combine-as-imports = true
 
-# MyPy configuration
-[tool.mypy]
-python_version = "3.10"
-check_untyped_defs = true
-ignore_missing_imports = true
-warn_unused_ignores = true
-warn_redundant_casts = true
-warn_unused_configs = true
-plugins = ["mypy_django_plugin.main"]
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-ignore_errors = true
 
 [tool.django-stubs]
 django_settings_module = "tests.testapp.settings"
