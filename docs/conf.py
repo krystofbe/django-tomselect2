@@ -21,7 +21,7 @@ sys.path.insert(0, str(BASE_DIR / "tests" / "testapp"))
 sys.path.insert(0, str(BASE_DIR))
 
 
-project = "Django-TomSelect2"
+project = "django-tomselect2"
 author = "Krystof Beuermann"
 copyright = f"{datetime.datetime.now().year}, {author}"
 # release = get_distribution("django_tomselect2").version # MODIFIED_2: Remove old line

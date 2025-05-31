@@ -1,8 +1,3 @@
-.. note::
-    Special thanks to Johannes Maron (codingjoe), creator of django-select2, whose work inspired much of what is presented here.
-
-.. include:: ../README.rst
-
 Installation
 ------------
 

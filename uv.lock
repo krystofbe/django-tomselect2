@@ -407,7 +407,7 @@ wheels = [
 
 [[package]]
 name = "django-tomselect2"
-version = "8.2.4.dev4+g9e6ad73.d20250531"
+version = "8.2.4.dev9+g84eda64.d20250531"
 source = { editable = "." }
 dependencies = [
     { name = "django" },

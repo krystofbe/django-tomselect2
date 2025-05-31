@@ -1,5 +1,5 @@
 """
-Django-TomSelect2 Widgets.
+django-tomselect2 Widgets.
 
 These components are responsible for rendering
 the necessary HTML data markups. Since this whole
@@ -31,7 +31,7 @@ are large and need complex queries (from maybe different
 sources) to get the options.
 
 This dynamic fetching of options undoubtedly requires
-Ajax communication with the server. Django-TomSelect2 includes
+Ajax communication with the server. django-tomselect2 includes
 a helper JS file which is included automatically,
 so you need not worry about writing any Ajax related JS code.
 Although on the server side you do need to create a view

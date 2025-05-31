@@ -1,4 +1,4 @@
-"""Settings for Django-TomSelect2."""
+"""Settings for django-tomselect2."""
 
 from appconf import AppConf
 from django.conf import settings
@@ -7,7 +7,7 @@ __all__ = ("TomSelect2Conf", "settings")
 
 
 class TomSelect2Conf(AppConf):
-    """Settings for Django-TomSelect2."""
+    """Settings for django-tomselect2."""
 
     CACHE_BACKEND = "default"
     """
@@ -115,6 +115,6 @@ class TomSelect2Conf(AppConf):
     """
 
     class Meta:
-        """Prefix for all Django-TomSelect2 settings."""
+        """Prefix for all django-tomselect2 settings."""
 
         prefix = "TOMSELECT2"

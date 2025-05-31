@@ -1,5 +1,5 @@
 """
-Django-TomSelect2 URL configuration.
+django-tomselect2 URL configuration.
 
 Add `django_tomselect2` to your ``urlconf`` **if** you use any 'Model' fields::
 

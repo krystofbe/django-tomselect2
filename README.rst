@@ -1,7 +1,7 @@
 |header|
 
 =================
-Django-TomSelect2
+django-tomselect2
 =================
 
 |version| |coverage| |license|
@@ -16,18 +16,14 @@ Documentation
 
 Documentation available at https://django-tomselect2.readthedocs.io/.
 
-.. note::
-   Django's admin comes with builtin support for TomSelect
-   via the `autocomplete_fields`_ feature.
-
 
 .. _Django: https://www.djangoproject.com/
 .. _TomSelect: https://tom-select.js.org/
 .. _autocomplete_fields: https://docs.djangoproject.com/en/stable/ref/contrib/admin/#django.contrib.admin.ModelAdmin.autocomplete_fields
 
 .. |header| image:: https://github.com/krystofbe/django-tomselect2/blob/main/docs/images/logo.png?raw=true
-.. |version| image:: https://img.shields.io/pypi/v/Django-TomSelect2.svg
-  :target: https://pypi.python.org/pypi/Django-TomSelect2/
+.. |version| image:: https://img.shields.io/pypi/v/django-tomselect2.svg
+  :target: https://pypi.python.org/pypi/django-tomselect2/
 .. |coverage| image:: https://codecov.io/gh/krystofbe/django-tomselect2/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/krystofbe/django-tomselect2
 .. |license| image:: https://img.shields.io/badge/license-APL2-blue.svg
