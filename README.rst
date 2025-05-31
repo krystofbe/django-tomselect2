@@ -8,14 +8,17 @@ Django-TomSelect2
 
 Custom autocomplete fields for `Django`_.
 
+.. note::
+   Special thanks to Johannes Maron (codingjoe) for his prior work on django-select2, which inspired this project.
+
 Documentation
 -------------
 
 Documentation available at https://django-tomselect2.readthedocs.io/.
 
 .. note::
-    Django's admin comes with builtin support for TomSelect
-    via the `autocomplete_fields`_ feature.
+   Django's admin comes with builtin support for TomSelect
+   via the `autocomplete_fields`_ feature.
 
 
 .. _Django: https://www.djangoproject.com/
@@ -24,8 +27,8 @@ Documentation available at https://django-tomselect2.readthedocs.io/.
 
 .. |header| image:: https://github.com/krystofbe/django-tomselect2/blob/main/docs/images/logo.png?raw=true
 .. |version| image:: https://img.shields.io/pypi/v/Django-TomSelect2.svg
-   :target: https://pypi.python.org/pypi/Django-TomSelect2/
+  :target: https://pypi.python.org/pypi/Django-TomSelect2/
 .. |coverage| image:: https://codecov.io/gh/krystofbe/django-tomselect2/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/krystofbe/django-tomselect2
+  :target: https://codecov.io/gh/krystofbe/django-tomselect2
 .. |license| image:: https://img.shields.io/badge/license-APL2-blue.svg
-   :target: https://raw.githubusercontent.com/krystofbe/django-tomselect2/master/LICENSE.txt
+  :target: https://raw.githubusercontent.com/krystofbe/django-tomselect2/master/LICENSE.txt
