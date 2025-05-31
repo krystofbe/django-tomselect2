@@ -1,8 +1,8 @@
 |header|
 
-==============
+=================
 Django-TomSelect2
-==============
+=================
 
 |version| |coverage| |license|
 

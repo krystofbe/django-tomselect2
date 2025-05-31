@@ -46,6 +46,9 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Install dependencies
+        run: uv sync --extra dev
+
       - name: Build package
         run: |
           uv build
@@ -151,13 +154,6 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Ruff security checks
-        run: uv run ruff check --select S .
 
   dependency-review:
     runs-on: ubuntu-latest

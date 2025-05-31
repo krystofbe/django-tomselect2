@@ -55,6 +55,7 @@ dev = [
   "ruff>=0.6.0",
   "pre-commit>=3.6",
   "django-stubs>=4.2",
+  "twine>=4.0",
 ]
 docs = [
   "sphinx>=7.0",
