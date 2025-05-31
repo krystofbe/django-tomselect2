@@ -202,8 +202,8 @@ class TestTomSelectWidget(StaticLiveServerTestCase):
         super().setUpClass()
         cls.playwright = sync_playwright().start()
         cls.browser = cls.playwright.chromium.launch(
-            headless=False
-        )  # Set headless=False if you want to see the browser
+            headless=True,
+        )
         cls.context = cls.browser.new_context()
         cls.page = cls.context.new_page()
 
@@ -331,8 +331,9 @@ class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
         super().setUpClass()
         cls.playwright = sync_playwright().start()
         cls.browser = cls.playwright.chromium.launch(
-            headless=False
-        )  # Set headless=False if you want to see the browser
+            headless=True,
+        )
+
         cls.context = cls.browser.new_context()
         cls.page = cls.context.new_page()
 
@@ -724,7 +725,7 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
 
         super().setUpClass()
         cls.playwright = sync_playwright().start()
-        cls.browser = cls.playwright.chromium.launch(headless=False)
+        cls.browser = cls.playwright.chromium.launch(headless=True)
         cls.context = cls.browser.new_context()
         cls.page = cls.context.new_page()
 
@@ -853,8 +854,8 @@ class TestModelTomSelectTagWidget(StaticLiveServerTestCase):
         super().setUpClass()
         cls.playwright = sync_playwright().start()
         cls.browser = cls.playwright.chromium.launch(
-            headless=False
-        )  # Set headless=True for CI
+            headless=True,
+        )
         cls.context = cls.browser.new_context()
         cls.page = cls.context.new_page()
 
