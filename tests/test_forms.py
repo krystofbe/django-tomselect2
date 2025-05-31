@@ -21,6 +21,7 @@ from django_tomselect2.forms import (
 from tests.testapp.models import Artist, Genre
 
 
+@pytest.mark.playwright
 class TestTomSelectMixin:
     def test_build_attrs_with_theme(self):
         """Test that theme is correctly included in tom-select settings"""
@@ -110,6 +111,7 @@ class TestTomSelectMixin:
             )
 
 
+@pytest.mark.playwright
 class TestTomSelectTagMixin:
     def test_build_attrs_includes_tag_settings(self):
         """
@@ -193,6 +195,7 @@ class TestTomSelectTagMixin:
         )
 
 
+@pytest.mark.playwright
 class TestTomSelectWidget(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
@@ -322,6 +325,7 @@ class TestTomSelectWidget(StaticLiveServerTestCase):
             )
 
 
+@pytest.mark.playwright
 class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
@@ -478,6 +482,7 @@ class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
         )
 
 
+@pytest.mark.playwright
 class TestHeavyTomSelectMixin:
     @pytest.fixture(autouse=True)
     def setup_cache(self):
@@ -593,6 +598,7 @@ class TestHeavyTomSelectMixin:
         return Genre.objects.all()
 
 
+@pytest.mark.playwright
 class TestModelTomSelectMixin:
     class TestWidget(ModelTomSelectMixin, HeavyTomSelectWidget):
         """Test class that combines the mixin with a concrete widget class"""
@@ -716,6 +722,7 @@ class TestModelTomSelectMixin:
         )
 
 
+@pytest.mark.playwright
 class TestModelTomSelectWidget(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
@@ -845,6 +852,7 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
         )
 
 
+@pytest.mark.playwright
 class TestModelTomSelectTagWidget(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
