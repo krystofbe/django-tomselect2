@@ -9,7 +9,6 @@ description = "Django integration for Tom Select autocomplete widget"
 readme = "README.rst"
 license = "MIT"
 authors = [
-  { name = "Johannes Maron", email = "johannes@maron.family" },
   { name = "Krystof Beuermann", email = "krystof@blackbox.ms" },
 ]
 keywords = ["Django", "tom-select", "autocomplete", "typeahead"]
