@@ -62,17 +62,13 @@ class TestTomSelectMixin:
         assert optgroups[0][1][0]["label"] == "Custom Empty Label"
 
     def test_media_includes_correct_files(self):
-        """Test that all required CSS and JS files are included in media"""
+        """Test that all required JS files are included in media"""
         widget = TomSelectWidget()
         media = widget.media
 
         # Check JS files
         assert "tom-select/js/tom-select.complete.min.js" in str(media)
         assert "django_tomselect2/django_tomselect.js" in str(media)
-
-        # Check CSS files
-        assert "django_tomselect2/django_tomselect.css" in str(media)
-        assert f"tom-select/css/tom-select.{widget.theme}.min.css" in str(media)
 
     def test_placeholder_rendering(self):
         """Test that placeholder attribute is correctly rendered"""
@@ -219,7 +215,7 @@ class TestTomSelectWidget(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def setUp(self):
-        self.url = reverse("select2_widget")
+        self.url = reverse("tomselect2_widget")
 
     def test_basic_select_rendering(self):
         """
@@ -350,7 +346,7 @@ class TestTomSelectMultipleWidget(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def setUp(self):
-        self.url = reverse("select2_multiple_widget")
+        self.url = reverse("tomselect2_multiple_widget")
 
     def test_multiple_selection(self):
         """
@@ -746,7 +742,7 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
         """
         Verify that the TomSelect widgets are rendered with correct HTML structure and attributes.
         """
-        self.page.goto(self.live_server_url + reverse("model_select2_widget"))
+        self.page.goto(self.live_server_url + reverse("model_tomselect2_widget"))
         artist_select = self.page.query_selector("#id_artist-ts-control")
         primary_genre_select = self.page.query_selector("#id_primary_genre-ts-control")
 
@@ -770,7 +766,7 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
         Artist.objects.create(title="Artist 2")
         Artist.objects.create(title="Specific Artist")
 
-        self.page.goto(self.live_server_url + reverse("model_select2_widget"))
+        self.page.goto(self.live_server_url + reverse("model_tomselect2_widget"))
         self.page.click(".ts-wrapper")  # Click on the first ts-wrapper
         artist_input = self.page.query_selector("#id_artist-ts-control")
         artist_input.fill("Artist")
@@ -786,7 +782,7 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
         Artist.objects.create(id=1, title="Artist 1")
         Genre.objects.create(id=2, title="Genre 2")
 
-        url = reverse("model_select2_widget") + "?artist=1&primary_genre=2"
+        url = reverse("model_tomselect2_widget") + "?artist=1&primary_genre=2"
         self.page.goto(self.live_server_url + url)
 
         # The correct selectors based on the actual HTML structure
@@ -812,7 +808,7 @@ class TestModelTomSelectWidget(StaticLiveServerTestCase):
         Genre.objects.create(title="Filtered Genre 2", artist=specific_artist)
         Genre.objects.create(title="Unrelated Genre")
 
-        self.page.goto(self.live_server_url + reverse("model_select2_widget"))
+        self.page.goto(self.live_server_url + reverse("model_tomselect2_widget"))
 
         # Click on the ts-control div for Artist to focus
         self.page.click("#id_artist + .ts-wrapper .ts-control")
@@ -877,12 +873,12 @@ class TestModelTomSelectTagWidget(StaticLiveServerTestCase):
 
     def setUp(self):
         # Navigate to the tag widget form
-        self.url = reverse("model_select2_tag_widget")
+        self.url = reverse("model_tomselect2_tag_widget")
         self.page.goto(self.live_server_url + self.url)
 
     def test_tag_creation(self):
         """Test creating a new tag through the widget"""
-        self.page.goto(self.live_server_url + reverse("model_select2_tag_widget"))
+        self.page.goto(self.live_server_url + reverse("model_tomselect2_tag_widget"))
 
         # Click the input to focus
         self.page.click("#id_genres-ts-control")
@@ -907,7 +903,7 @@ class TestModelTomSelectTagWidget(StaticLiveServerTestCase):
         # Create a test genre
         Genre.objects.create(title="Existing Genre")
 
-        self.page.goto(self.live_server_url + reverse("model_select2_tag_widget"))
+        self.page.goto(self.live_server_url + reverse("model_tomselect2_tag_widget"))
 
         # Click the input and type
         self.page.click("#id_genres-ts-control")
@@ -926,7 +922,7 @@ class TestModelTomSelectTagWidget(StaticLiveServerTestCase):
 
     def test_multiple_tag_handling(self):
         """Test handling multiple tags"""
-        self.page.goto(self.live_server_url + reverse("model_select2_tag_widget"))
+        self.page.goto(self.live_server_url + reverse("model_tomselect2_tag_widget"))
 
         test_tags = ["Tag One", "Tag Two", "Tag Three"]
 

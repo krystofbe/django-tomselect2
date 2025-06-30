@@ -28,6 +28,6 @@ urlpatterns = [
         views.BookAutocomplete.as_view(),
         name="book_autocomplete",
     ),
-    path("select2/", include("django_tomselect2.urls")),
+    path("tomselect2/", include("django_tomselect2.urls")),
     path("admin/", admin.site.urls),
 ]

@@ -1,12 +1,28 @@
-document.addEventListener("DOMContentLoaded", initializeTomSelectElements);
+document.addEventListener("DOMContentLoaded", () =>
+  initializeTomSelectElements(document),
+);
 
 document.addEventListener("formset:added", handleFormsetAdded);
 
+/* -------------------------------------------------------------------------
+ * HTMX integration
+ *   • initialise TomSelect for fragments swapped into the DOM
+ *   • fire an htmx change-trigger whenever the select value changes
+ * ----------------------------------------------------------------------  */
+if (window.htmx) {
+  /* When HTMX swaps content in (`htmx:load` = alias for `htmx:afterSwap`)
+     we only have to look at the fragment that was just added (event.target). */
+  document.body.addEventListener("htmx:load", (event) => {
+    initializeTomSelectElements(event.target);
+  });
+}
+
 /**
- * Initializes all Tom Select elements on the page.
+ * Initializes all Tom Select elements inside a given root node.
+ * @param {ParentNode} root - The node inside which we look for [data-tom-select] elements.
  */
-function initializeTomSelectElements() {
-  const tomSelectElements = document.querySelectorAll("[data-tom-select]");
+function initializeTomSelectElements(root = document) {
+  const tomSelectElements = root.querySelectorAll("[data-tom-select]");
   tomSelectElements.forEach(initializeTomSelectElement);
 }
 
@@ -15,9 +31,7 @@ function initializeTomSelectElements() {
  * @param {Event} event - The formset:added event.
  */
 function handleFormsetAdded(event) {
-  const addedForm = event.target;
-  const newSelects = addedForm.querySelectorAll("[data-tom-select]");
-  newSelects.forEach(initializeTomSelectElement);
+  initializeTomSelectElements(event.target);
 }
 
 /**
@@ -53,6 +67,12 @@ function processPluginCallbacks(config) {
  * @param {HTMLElement} element - The select element to initialize.
  */
 function initializeTomSelectElement(element) {
+  /* Do nothing if this element is already wired-up. Prevents double init
+     when both htmx and formset listeners hit the same node. */
+  if (element.tomselect) {
+    return;
+  }
+
   // Parse the data-tom-select attribute if it exists
   let tomSelectConfig = {};
   if (element.dataset.tomSelect) {
@@ -116,10 +136,21 @@ function autoSelectSingleOption(tom, data) {
 }
 
 /**
- * Handles the change event for Tom Select elements, managing dependent fields.
+ * Handles the change event for Tom Select elements, managing dependent fields
+ * and notifying HTMX (if present) that the value changed.
  * @param {Event} event - The change event.
  */
 function handleSelectionChange(event) {
+  /* ---------------------------------------------------------------------
+   * 1. HTMX trigger
+   * ------------------------------------------------------------------  */
+  if (window.htmx) {
+    window.htmx.trigger(event.target, "change");
+  }
+
+  /* ---------------------------------------------------------------------
+   * 2. Dependent field logic
+   * ------------------------------------------------------------------  */
   const selectedFieldName = event.target.name;
   const dependentSelectors = document.querySelectorAll(
     `[data-dependent-fields~="${selectedFieldName}"]`,
