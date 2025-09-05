@@ -2,4 +2,3 @@ include django_tomselect2/static/django_tomselect2/django_tomselect2.js
 include django_tomselect2/static/django_tomselect2/django_tomselect2.css
 prune .github
 exclude .*
-

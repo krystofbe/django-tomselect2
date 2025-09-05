@@ -1048,7 +1048,7 @@
 },
 {
     "model": "example.bookreview",
-    "pk": 2, 
+    "pk": 2,
     "fields": {
         "book": 1,
         "review_text": "Good but could be better",
@@ -1058,7 +1058,7 @@
 },
 {
     "model": "example.bookreview",
-    "pk": 3, 
+    "pk": 3,
     "fields": {
         "book": 1,
         "review_text": "Really did not like it",
@@ -1067,7 +1067,7 @@
     }
 },
 {
-    "model": "example.bookreview", 
+    "model": "example.bookreview",
     "pk": 4,
     "fields": {
         "book": 2,
@@ -1097,5 +1097,5 @@
     }
 }
 
- 
+
 ]

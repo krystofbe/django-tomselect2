@@ -48,13 +48,13 @@ Cache
 
 JavaScript
 ----------
-``django-tomselect2`` automatically handles the initialization of your Tom Select fields. 
-Simply include ``{{ form.media.js }}`` (and CSS if needed) in your template—ideally before 
+``django-tomselect2`` automatically handles the initialization of your Tom Select fields.
+Simply include ``{{ form.media.js }}`` (and CSS if needed) in your template—ideally before
 the closing ``</body>`` tag—to ensure Tom Select is loaded and configured.
 
-If you insert forms dynamically after page load, or you want to handle initialization 
-manually, ``django-tomselect2`` also provides a convenient initialization call. For 
-example, if you add elements with the class ``django-tomselect2`` on the fly, you can 
+If you insert forms dynamically after page load, or you want to handle initialization
+manually, ``django-tomselect2`` also provides a convenient initialization call. For
+example, if you add elements with the class ``django-tomselect2`` on the fly, you can
 activate them like so:
 
 .. code-block:: javascript
@@ -71,8 +71,8 @@ activate them like so:
 Configuration in Django
 -----------------------
 
-You can configure Tom Select globally or on individual widgets via the attributes. 
-The majority of Tom Select’s options can be passed as JSON in the widget’s 
+You can configure Tom Select globally or on individual widgets via the attributes.
+The majority of Tom Select’s options can be passed as JSON in the widget’s
 ``data-tom-select`` attribute. For instance:
 
 .. code-block:: python
@@ -89,8 +89,8 @@ The majority of Tom Select’s options can be passed as JSON in the widget’s
             )
         )
 
-You can also pass options through your Django settings (``TOMSELECT2_TOM_SELECT_SETTINGS``), 
-ensuring a global default configuration for all widgets. Individual widget settings will 
+You can also pass options through your Django settings (``TOMSELECT2_TOM_SELECT_SETTINGS``),
+ensuring a global default configuration for all widgets. Individual widget settings will
 override these global defaults.
 
 (See the Tom Select documentation for a full list of available options.)
@@ -98,11 +98,11 @@ override these global defaults.
 Configuring Tom Select
 ----------------------
 
-Similar to the example above, Tom Select can be configured either from JavaScript or from 
+Similar to the example above, Tom Select can be configured either from JavaScript or from
 within Django:
 
 - **From JavaScript** (manual initialization): Provide any valid Tom Select options directly.
-- **From Django** (automatic initialization): Use the widget’s ``attrs`` or the package’s 
+- **From Django** (automatic initialization): Use the widget’s ``attrs`` or the package’s
   global settings (``TOMSELECT2_TOM_SELECT_SETTINGS``) to pass your configuration.
 
 Example:
@@ -120,12 +120,12 @@ Example:
 
 Security & Authentication
 -------------------------
-When using Tom Select with dynamic (AJAX-based) widgets, be mindful of caching 
-and security. The heavy (AJAX) widgets keep a reference to their configuration in 
+When using Tom Select with dynamic (AJAX-based) widgets, be mindful of caching
+and security. The heavy (AJAX) widgets keep a reference to their configuration in
 Django’s cache, so be sure to set up a reliable external cache (e.g., Redis or Memcached).
 
-For private or authenticated data, you may want to protect the view endpoint. You could, 
-for example, subclass the provided Ajax views and wrap them with Django’s 
+For private or authenticated data, you may want to protect the view endpoint. You could,
+for example, subclass the provided Ajax views and wrap them with Django’s
 ``LoginRequiredMixin`` or your own permission checks:
 
 .. code-block:: python
@@ -144,7 +144,6 @@ Then specify ``data_view`` for your widget:
         data_view = 'my-private-ajax-endpoint'
         # other widget config…
 
-Remember that when using the heavy widgets, an attacker could spam requests to keep 
-the cache populated. Isolating your ``django-tomselect2`` usage to a dedicated cache 
+Remember that when using the heavy widgets, an attacker could spam requests to keep
+the cache populated. Isolating your ``django-tomselect2`` usage to a dedicated cache
 can mitigate any potential issues.
-

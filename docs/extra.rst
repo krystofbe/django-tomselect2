@@ -12,6 +12,56 @@ Hence, one selector depends on another one.
     Does not work with the 'light' version (django_tomselect2.forms.TomSelectWidget),
     because all options for the dependent field would need to be preloaded.
 
+Heavy Widget Auto-Loading
+-------------------------
+
+Starting from version 0.1.0, Heavy widgets automatically load initial results when the dropdown is opened,
+providing a better user experience similar to standard HTML select elements.
+
+Default Behavior
+````````````````
+
+By default, Heavy widgets now:
+
+- Load initial results when the dropdown is focused/opened (``preload: 'focus'``)
+- Allow empty search queries to fetch results (``shouldLoad`` returns true for empty queries)
+- Display up to 25 results initially (configurable via ``max_results``)
+
+This means users see available options immediately upon clicking the widget, without needing to type first.
+
+Configuring Preload Behavior
+`````````````````````````````
+
+You can customize or disable this behavior using ``tom_select_settings``:
+
+.. code-block:: python
+
+    # Default behavior - loads on focus
+    widget = ModelTomSelectWidget(
+        data_view="author_autocomplete"
+    )
+
+    # Disable preload (old behavior - require typing)
+    widget = ModelTomSelectWidget(
+        data_view="author_autocomplete",
+        tom_select_settings={
+            'preload': False,
+            'minLength': 1  # Require at least 1 character
+        }
+    )
+
+    # Load immediately on widget initialization
+    widget = ModelTomSelectWidget(
+        data_view="author_autocomplete",
+        tom_select_settings={'preload': True}
+    )
+
+    # Customize number of initial results
+    widget = ModelTomSelectWidget(
+        data_view="author_autocomplete",
+        max_results=10  # Show only 10 results initially
+    )
+
 Models
 ``````
 

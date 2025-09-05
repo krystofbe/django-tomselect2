@@ -144,7 +144,8 @@ function handleSelectionChange(event) {
   /* ---------------------------------------------------------------------
    * 1. HTMX trigger
    * ------------------------------------------------------------------  */
-  if (window.htmx) {
+  // Only trigger HTMX for trusted, user-initiated events to prevent infinite loops
+  if (window.htmx && event.isTrusted) {
     window.htmx.trigger(event.target, "change");
   }
 
@@ -250,6 +251,11 @@ function getHeavyTomSelectSettings(element, tomSelectConfig) {
     searchField: (element.getAttribute("data-search-field") || "text")
       .split(",")
       .map((field) => field.trim()),
+    openOnFocus: true,
+    preload: 'focus',
+    shouldLoad: function(query) {
+      return true; // Allow loading even with empty queries
+    },
     load: function (query, callback) {
       const params = new URLSearchParams();
       params.append("q", query);
